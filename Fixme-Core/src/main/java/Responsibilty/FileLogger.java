@@ -1,4 +1,4 @@
-package src.main.java.Responsibilty;
+package Responsibilty;
 
 public class FileLogger extends AbstractLogger {
 

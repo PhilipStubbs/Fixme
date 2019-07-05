@@ -1,5 +1,7 @@
-package src.main.java.Responsibilty;
+package Responsibilty;
 
+
+//https://www.tutorialspoint.com/design_pattern/chain_of_responsibility_pattern.htm
 public abstract class AbstractLogger {
     public static int INFO = 1;
     public static int DEBUG = 2;
