@@ -14,6 +14,10 @@
         <module>Fixme-Market</module>
         <module>Pratice-ClientServer</module>
         <module>Fixme-Core</module>
+        <module>Pratice-Server</module>
+        <module>Practice-Client</module>
+        <module>Practice-Client</module>
+        <module>Practice-Server</module>
     </modules>
 
 
