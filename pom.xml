@@ -12,6 +12,8 @@
         <module>Fixme-Router</module>
         <module>Fixme-Broker</module>
         <module>Fixme-Market</module>
+        <module>Pratice-ClientServer</module>
+        <module>Fixme-Core</module>
     </modules>
 
 
