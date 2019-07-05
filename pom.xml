@@ -28,7 +28,7 @@
                         <manifest>
                             <addClasspath>true</addClasspath>
                             <classpathPrefix>lib/</classpathPrefix>
-                            <mainClass>Controllers.Main</mainClass>
+                            <mainClass>Controllers.Server.Server</mainClass>
                         </manifest>
                     </archive>
                 </configuration>
