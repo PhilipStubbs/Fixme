@@ -12,13 +12,13 @@ public class Main {
         boolean client = false;
         int port = 5000;
         try  (ServerSocket serverSocket = new ServerSocket(port)){
-
+            System.out.println("listening on port:"+port);
 
             while(true){
                 Socket socket = serverSocket.accept();
                 Echoer echoer = new Echoer(socket);
                 echoer.start();
-                new Echoer(serverSocket.accept()).start();
+//                new Echoer(serverSocket.accept()).start();
             }
 
         } catch (IOException e){

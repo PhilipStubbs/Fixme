@@ -8,11 +8,11 @@ import java.net.Socket;
 import java.nio.channels.AsynchronousSocketChannel;
 import java.util.UUID;
 
-public class SocketHandler extends Thread{
+public class SocketHandlerAsync extends Thread{
 	private AsynchronousSocketChannel socket;
 	private UUID uuid;
 
-	public SocketHandler(AsynchronousSocketChannel socket){
+	public SocketHandlerAsync(AsynchronousSocketChannel socket){
 		this.socket = socket;
 		this.uuid = UUID.randomUUID();
 	}
@@ -45,6 +45,10 @@ public class SocketHandler extends Thread{
 
 	public UUID getUuid() {
 		return uuid;
+	}
+
+	public AsynchronousSocketChannel getSocket() {
+		return socket;
 	}
 }
 

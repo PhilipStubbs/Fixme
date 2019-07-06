@@ -5,6 +5,9 @@ public class Market {
 
     public static void main(String[] args) {
         Client client = new Client(port);
+        System.out.println(client.getClient().isOpen());
+
+
         while(true);
     }
 

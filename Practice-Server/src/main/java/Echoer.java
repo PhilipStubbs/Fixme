@@ -24,7 +24,7 @@ public class Echoer extends Thread {
 				if (echoString.equals("exit")){
 					break;
 				}
-				output.println(echoString);
+				output.println("server says:" +echoString);
 			}
 
 		} catch (IOException e){

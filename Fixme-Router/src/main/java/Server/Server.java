@@ -17,46 +17,57 @@ import java.util.concurrent.TimeUnit;
 public class Server {
     static final int brokerPort = 5000;
     static final int marketPort = 5001;
-
+    static private List<String> marketMessages = new ArrayList<String>();
+    static private List<String> brokerMessages = new ArrayList<String>();
 
     public static void main(String[] args) {
 
-        RouterAsync routerBrokerAsync = new RouterAsync(brokerPort);
+//        RouterAsync routerBrokerAsync = new RouterAsync(brokerPort);
         RouterAsync routerMarketAsync = new RouterAsync(marketPort);
-        routerBrokerAsync.start();
+//        routerBrokerAsync.start();
         routerMarketAsync.start();
 
-    }
 
-
-    public static void test(){
-        try (AsynchronousServerSocketChannel server =  AsynchronousServerSocketChannel.open()) {
-            server.bind(new InetSocketAddress("127.0.0.1",
-                    1234));
-
-            Future<AsynchronousSocketChannel> acceptCon = server.accept();
-            AsynchronousSocketChannel client = acceptCon.get(10, TimeUnit.SECONDS);
-
-            if ((client!= null) && (client.isOpen())) {
-                ByteBuffer buffer = ByteBuffer.allocate(1024);
-                Future<Integer> readval = client.read(buffer);
-                System.out.println("Received from client: "
-                        + new String(buffer.array()).trim());
-                readval.get();
-                buffer.flip();
-                String str= "I'm fine. Thank you!";
-                Future<Integer> writeVal = client.write(
-                        ByteBuffer.wrap(str.getBytes()));
-                System.out.println("Writing back to client: "
-                        +str);
-                writeVal.get();
-                buffer.clear();
+        while (true){
+            marketMessages = routerMarketAsync.getMessages();
+            // TODO -- message parusing is required. And extracting UUID from it.
+            if (marketMessages.size() > 0 && routerMarketAsync.getClientList().size() > 0) {
+                routerMarketAsync.sendMessage(marketMessages.get(0), routerMarketAsync.getClientList().get(0).getUuid());
+                marketMessages.clear();
             }
-            client.close();
-        } catch (Exception e) {
-            e.printStackTrace();
+//            brokerMessages = routerBrokerAsync.getMessages();
         }
     }
+
+
+//    public static void test(){
+//        try (AsynchronousServerSocketChannel server =  AsynchronousServerSocketChannel.open()) {
+//            server.bind(new InetSocketAddress("127.0.0.1",
+//                    1234));
+//
+//            Future<AsynchronousSocketChannel> acceptCon = server.accept();
+//            AsynchronousSocketChannel client = acceptCon.get(10, TimeUnit.SECONDS);
+//
+//            if ((client!= null) && (client.isOpen())) {
+//                ByteBuffer buffer = ByteBuffer.allocate(1024);
+//                Future<Integer> readval = client.read(buffer);
+//                System.out.println("Received from client: "
+//                        + new String(buffer.array()).trim());
+//                readval.get();
+//                buffer.flip();
+//                String str= "I'm fine. Thank you!";
+//                Future<Integer> writeVal = client.write(
+//                        ByteBuffer.wrap(str.getBytes()));
+//                System.out.println("Writing back to client: "
+//                        +str);
+//                writeVal.get();
+//                buffer.clear();
+//            }
+//            client.close();
+//        } catch (Exception e) {
+//            e.printStackTrace();
+//        }
+//    }
 }
 
 
