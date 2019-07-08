@@ -28,26 +28,11 @@ public class RouterAsync extends Thread {
 			while(true){
 				Future<AsynchronousSocketChannel> acceptCon = server.accept();
 				AsynchronousSocketChannel client = acceptCon.get();
-				if ((client!= null) && (client.isOpen())) {
-
-					SocketHandlerAsync socketHandlerAsync = new SocketHandlerAsync(client);
-					clientList.add(socketHandlerAsync);
-					System.out.println("Added Client: " + socketHandlerAsync.getUuid().toString());
-
-
-					ByteBuffer buffer = ByteBuffer.allocate(1024);
-					Future<Integer> readval = client.read(buffer);		// readers from client
-
-					String clientMessage =  new String(buffer.array()).trim();
-					System.out.println("Received from client: "	+clientMessage);
-					messages.add(clientMessage);
-					readval.get();
-					buffer.flip();
-
-
-					buffer.clear();
-
-				}
+				// TODO
+				SocketHandlerAsync socketHandlerAsync = new SocketHandlerAsync(client, messages);
+				System.out.println("Added Client: " + socketHandlerAsync.getUuid().toString());
+				clientList.add(socketHandlerAsync);
+				socketHandlerAsync.start();
 			}
 
 		}  catch (Exception e){
@@ -72,20 +57,20 @@ public class RouterAsync extends Thread {
 			}
 			if (socketHandlerAsync != null) {
 				AsynchronousSocketChannel client = socketHandlerAsync.getSocket();
-				String message = str +  uuid.toString();
+				String message = str + " " +  uuid.toString();												// message
 				ByteBuffer messageByteBuffer = ByteBuffer.allocate(message.length());
 				messageByteBuffer.wrap(message.getBytes());
 
 				Future<Integer> writeVal = client.write(messageByteBuffer.wrap(message.getBytes()));        // writes to client
+				writeVal.get();
 
 				System.out.println("Writing back to client: " + message);
-				writeVal.get();
 			} else {
 				System.out.println(getClass().getSimpleName() + "> failed to send message to :"+ uuid);
 			}
 
 		} catch (Exception e){
-			System.out.println("Server Exception "+ e.getLocalizedMessage());
+			System.out.println(getClass().getSimpleName()+"> Server Exception "+ e.getLocalizedMessage());
 		}
 	}
 

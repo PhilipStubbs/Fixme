@@ -19,6 +19,8 @@ public class Server {
     static final int marketPort = 5001;
     static private List<String> marketMessages = new ArrayList<String>();
     static private List<String> brokerMessages = new ArrayList<String>();
+    static private  List<SocketHandlerAsync> marketClientList = new ArrayList<SocketHandlerAsync>();
+    static private  List<SocketHandlerAsync> brokerClientList = new ArrayList<SocketHandlerAsync>();
 
     public static void main(String[] args) {
 
@@ -28,46 +30,27 @@ public class Server {
         routerMarketAsync.start();
 
 
-        while (true){
-            marketMessages = routerMarketAsync.getMessages();
-            // TODO -- message parusing is required. And extracting UUID from it.
-            if (marketMessages.size() > 0 && routerMarketAsync.getClientList().size() > 0) {
-                routerMarketAsync.sendMessage(marketMessages.get(0), routerMarketAsync.getClientList().get(0).getUuid());
-                marketMessages.clear();
-            }
+        while (true) {
+            try {
+                marketClientList = routerMarketAsync.getClientList();
+//                brokerClientList = routerBrokerAsync.getClientList();
+                marketMessages = routerMarketAsync.getMessages();
+
+                // TODO -- message parusing is required. And extracting UUID from it.
+                TimeUnit.SECONDS.sleep(1);
+                System.out.println("msg:"+marketMessages.size() +" client:"+marketClientList.size());
+                if (marketMessages.size() > 0 && marketClientList.size() > 0) {
+                    String tmpMessage = marketMessages.get(0);
+                    routerMarketAsync.sendMessage(tmpMessage, routerMarketAsync.getClientList().get(0).getUuid());
+                    marketMessages.remove(tmpMessage);
+                }
 //            brokerMessages = routerBrokerAsync.getMessages();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
         }
     }
 
-
-//    public static void test(){
-//        try (AsynchronousServerSocketChannel server =  AsynchronousServerSocketChannel.open()) {
-//            server.bind(new InetSocketAddress("127.0.0.1",
-//                    1234));
-//
-//            Future<AsynchronousSocketChannel> acceptCon = server.accept();
-//            AsynchronousSocketChannel client = acceptCon.get(10, TimeUnit.SECONDS);
-//
-//            if ((client!= null) && (client.isOpen())) {
-//                ByteBuffer buffer = ByteBuffer.allocate(1024);
-//                Future<Integer> readval = client.read(buffer);
-//                System.out.println("Received from client: "
-//                        + new String(buffer.array()).trim());
-//                readval.get();
-//                buffer.flip();
-//                String str= "I'm fine. Thank you!";
-//                Future<Integer> writeVal = client.write(
-//                        ByteBuffer.wrap(str.getBytes()));
-//                System.out.println("Writing back to client: "
-//                        +str);
-//                writeVal.get();
-//                buffer.clear();
-//            }
-//            client.close();
-//        } catch (Exception e) {
-//            e.printStackTrace();
-//        }
-//    }
 }
 
 

@@ -9,6 +9,7 @@ import java.nio.ByteBuffer;
 import java.nio.channels.AsynchronousSocketChannel;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
@@ -25,10 +26,14 @@ public class Client {
 			this.client = client;
 
 			result.get();
+			Random rn = new Random();
 
-			sendServerMessage("test");
-			getServerMessage();
 
+			while (true) {
+				sendServerMessage("test" + rn.nextInt());
+				TimeUnit.SECONDS.sleep(1);
+				getServerMessage();
+			}
 		// TODO -- seems like we might have to put market code in here. Else the connection closes.
 
 		}
