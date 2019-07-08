@@ -1,5 +1,7 @@
 package Server;
 
+import Responsibilty.AbstractLogger;
+
 import java.net.InetSocketAddress;
 import java.nio.channels.AsynchronousServerSocketChannel;
 import java.nio.channels.AsynchronousSocketChannel;
@@ -7,10 +9,16 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Future;
 
+import static Responsibilty.AbstractLogger.ERROR;
+import static Responsibilty.AbstractLogger.INFO;
+import static Responsibilty.Logger.getChainOfLoggers;
+
 public class RouterAsync extends Thread {
 	private int port;
 	private List<SocketHandlerAsync> clientList = new ArrayList<SocketHandlerAsync>();
 	private List<String> messages = new ArrayList<String>();
+	private AbstractLogger logger = getChainOfLoggers();
+
 
 
 	public RouterAsync(int port){
@@ -28,7 +36,7 @@ public class RouterAsync extends Thread {
 				AsynchronousSocketChannel client = acceptCon.get();
 				// TODO
 				SocketHandlerAsync socketHandlerAsync = new SocketHandlerAsync(client, messages);
-				System.out.println("Added Client: " + socketHandlerAsync.getClientId());
+				logger.logMessage(INFO,"Added Client: " + socketHandlerAsync.getClientId());
 				clientList.add(socketHandlerAsync);
 				socketHandlerAsync.start();
 			}
@@ -58,11 +66,11 @@ public class RouterAsync extends Thread {
 				socketHandlerAsync.sendMessage(message);
 				System.out.println("Writing back to client: " + message);
 			} else {
-				System.out.println(getClass().getSimpleName() + "> failed to send message to :"+ id);
+				logger.logMessage(ERROR,getClass().getSimpleName() + "> failed to send message to :"+ id);
 			}
 
 		} catch (Exception e){
-			System.out.println(getClass().getSimpleName()+"> Server Exception "+ e.getLocalizedMessage());
+			logger.logMessage(ERROR,getClass().getSimpleName()+"> Server Exception "+ e.getLocalizedMessage());
 		}
 	}
 

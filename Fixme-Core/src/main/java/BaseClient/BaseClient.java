@@ -1,6 +1,6 @@
 package BaseClient;
 
-import Server.RouterAsync;
+import Responsibilty.AbstractLogger;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
@@ -13,11 +13,15 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
+import static Responsibilty.AbstractLogger.INFO;
+import static Responsibilty.Logger.getChainOfLoggers;
+
 public class BaseClient {
 	private int port;
 	private AsynchronousSocketChannel client;
 	private List<String> messages = new ArrayList<String>();
 	private String id;
+	private AbstractLogger logger = getChainOfLoggers();
 
 	public BaseClient(int port){
 		this.port = port;
@@ -27,11 +31,11 @@ public class BaseClient {
 			result.get();
 
 			/* Awaiting for ID from Router	*/
-			System.out.println("Awaiting ID");
+			logger.logMessage(INFO, "Awaiting ID");
 			getServerMessage();
 			id = messages.get(0);
 			messages.clear();
-			System.out.println("ID Assigned :"+id);
+			logger.logMessage(INFO,"ID Assigned :"+id);
 
 
 			Random rn = new Random();
@@ -81,16 +85,12 @@ public class BaseClient {
 		}
 	}
 
-	public void terminateConnection(RouterAsync router) {
+	public void terminateConnection() {
 		try {
-			router.getClientList().remove(this);
-		} finally {
-			try {
-				System.out.println("Connection Terminated");
-				client.close();
-			} catch (IOException e) {
-				// NO OP
-			}
+			logger.logMessage(INFO,"Connection Terminated");
+			client.close();
+		} catch (IOException e) {
+			// NO OP
 		}
 	}
 
