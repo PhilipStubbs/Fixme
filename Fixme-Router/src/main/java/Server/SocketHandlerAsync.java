@@ -1,27 +1,28 @@
 package Server;
 
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.PrintWriter;
-import java.net.Socket;
 import java.nio.ByteBuffer;
 import java.nio.channels.AsynchronousSocketChannel;
 import java.nio.channels.CompletionHandler;
+import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
 public class SocketHandlerAsync extends Thread{
 	private AsynchronousSocketChannel socket;
-	private UUID uuid;
 	private List<String> messages;
+	private String id;
 
 	public SocketHandlerAsync(AsynchronousSocketChannel socket, List<String> messages){
 		this.socket = socket;
-		this.uuid = UUID.randomUUID();
 		this.messages = messages;
+		String epochString = String.valueOf(Instant.now().toEpochMilli());
+		this.id = epochString.substring(7);
+		System.out.println(id);
+		sendMessage(id);
 	}
 
 	@Override
@@ -34,30 +35,6 @@ public class SocketHandlerAsync extends Thread{
 					ByteBuffer buffer = ByteBuffer.allocate(1024);
 					Future<Integer> readval = socket.read(buffer);		// readers from client
 					readval.get();
-
-//					socket.read(buffer, null,
-//					new CompletionHandler<Integer , Object>() {
-//						@Override
-//						public void completed(Integer result, Object attachment) {
-//							if (result < 0) {
-//								// handle unexpected connection close
-//							}
-//							else if (buffer.remaining() > 0) {
-//								// repeat the call with the same CompletionHandler
-//								socket.read(buffer, null, this);
-//							}
-//							else {
-//								String clientMessage =  new String(buffer.array()).trim();
-//								System.out.println("Received from client: "	+clientMessage);
-//								messages.add(clientMessage);
-//								// got all data, process the buffer
-//							}
-//						}
-//						@Override
-//						public void failed(Throwable e, Object attachment) {
-//							// handle the failure
-//						}
-//					});
 
 
 					String clientMessage =  new String(buffer.array()).trim();
@@ -80,8 +57,22 @@ public class SocketHandlerAsync extends Thread{
 		}
 	}
 
-	public UUID getUuid() {
-		return uuid;
+	public void sendMessage(String message){
+		try {
+				ByteBuffer messageByteBuffer = ByteBuffer.allocate(message.length());
+				messageByteBuffer.wrap(message.getBytes());
+
+				Future<Integer> writeVal = socket.write(messageByteBuffer.wrap(message.getBytes()));        // writes to client
+				writeVal.get();
+		}
+		 catch (InterruptedException | ExecutionException e){
+			System.out.println(getClass().getSimpleName()+"> Server Exception "+ e.getLocalizedMessage());
+		}
+	}
+
+
+	public String getClientId() {
+		return id;
 	}
 
 	public AsynchronousSocketChannel getSocket() {

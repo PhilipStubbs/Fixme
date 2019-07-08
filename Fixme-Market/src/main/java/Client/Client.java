@@ -18,14 +18,23 @@ public class Client {
 	private int port;
 	private AsynchronousSocketChannel client;
 	private List<String> messages = new ArrayList<String>();
+	private String id;
 
 	public Client(int port){
 		this.port = port;
 		try (AsynchronousSocketChannel client = AsynchronousSocketChannel.open()) {
 			Future<Void> result = client.connect(new InetSocketAddress("127.0.0.1", port));
 			this.client = client;
-
 			result.get();
+
+			/* Awaiting for ID from Router	*/
+			System.out.println("Awaiting ID");
+			getServerMessage();
+			id = messages.get(0);
+			messages.clear();
+			System.out.println("ID Assigned :"+id);
+
+
 			Random rn = new Random();
 
 

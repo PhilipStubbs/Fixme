@@ -1,17 +1,7 @@
 package Server;
 
-import java.io.IOException;
-import java.net.InetSocketAddress;
-import java.net.ServerSocket;
-import java.net.Socket;
-import java.nio.ByteBuffer;
-import java.nio.channels.AsynchronousServerSocketChannel;
-import java.nio.channels.AsynchronousSocketChannel;
-import java.nio.channels.CompletionHandler;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.UUID;
-import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
 public class Server {
@@ -41,7 +31,7 @@ public class Server {
                 System.out.println("msg:"+marketMessages.size() +" client:"+marketClientList.size());
                 if (marketMessages.size() > 0 && marketClientList.size() > 0) {
                     String tmpMessage = marketMessages.get(0);
-                    routerMarketAsync.sendMessage(tmpMessage, routerMarketAsync.getClientList().get(0).getUuid());
+                    routerMarketAsync.sendMessage(tmpMessage, routerMarketAsync.getClientList().get(0).getClientId());
                     marketMessages.remove(tmpMessage);
                 }
 //            brokerMessages = routerBrokerAsync.getMessages();
