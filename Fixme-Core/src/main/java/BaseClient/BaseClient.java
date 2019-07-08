@@ -1,10 +1,9 @@
-package Client;
+package BaseClient;
 
 import Server.RouterAsync;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
-import java.net.StandardSocketOptions;
 import java.nio.ByteBuffer;
 import java.nio.channels.AsynchronousSocketChannel;
 import java.util.ArrayList;
@@ -14,13 +13,13 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
-public class Client {
+public class BaseClient {
 	private int port;
 	private AsynchronousSocketChannel client;
 	private List<String> messages = new ArrayList<String>();
 	private String id;
 
-	public Client(int port){
+	public BaseClient(int port){
 		this.port = port;
 		try (AsynchronousSocketChannel client = AsynchronousSocketChannel.open()) {
 			Future<Void> result = client.connect(new InetSocketAddress("127.0.0.1", port));
@@ -37,13 +36,12 @@ public class Client {
 
 			Random rn = new Random();
 
-
+			// TODO -- proper logic for messaging.
 			while (true) {
 				sendServerMessage("test" + rn.nextInt());
 				TimeUnit.SECONDS.sleep(1);
 				getServerMessage();
 			}
-		// TODO -- seems like we might have to put market code in here. Else the connection closes.
 
 		}
 		catch (ExecutionException | IOException e) {

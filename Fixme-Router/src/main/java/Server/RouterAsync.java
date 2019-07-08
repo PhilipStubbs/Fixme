@@ -1,12 +1,10 @@
 package Server;
 
 import java.net.InetSocketAddress;
-import java.nio.ByteBuffer;
 import java.nio.channels.AsynchronousServerSocketChannel;
 import java.nio.channels.AsynchronousSocketChannel;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.UUID;
 import java.util.concurrent.Future;
 
 public class RouterAsync extends Thread {
@@ -45,7 +43,7 @@ public class RouterAsync extends Thread {
 		startServer();
 	}
 
-	public void sendMessage(String str, String id){
+	public void sendMessage(String str, String id) {
 		try {
 			SocketHandlerAsync socketHandlerAsync = null;
 			for (int i = 0; i < clientList.size(); i++)

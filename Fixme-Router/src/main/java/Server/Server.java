@@ -14,9 +14,9 @@ public class Server {
 
     public static void main(String[] args) {
 
-//        RouterAsync routerBrokerAsync = new RouterAsync(brokerPort);
+        RouterAsync routerBrokerAsync = new RouterAsync(brokerPort);
         RouterAsync routerMarketAsync = new RouterAsync(marketPort);
-//        routerBrokerAsync.start();
+        routerBrokerAsync.start();
         routerMarketAsync.start();
 
 

@@ -6,10 +6,8 @@ import java.nio.channels.AsynchronousSocketChannel;
 import java.nio.channels.CompletionHandler;
 import java.time.Instant;
 import java.util.List;
-import java.util.UUID;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
 
 public class SocketHandlerAsync extends Thread{
 	private AsynchronousSocketChannel socket;
@@ -21,7 +19,6 @@ public class SocketHandlerAsync extends Thread{
 		this.messages = messages;
 		String epochString = String.valueOf(Instant.now().toEpochMilli());
 		this.id = epochString.substring(7);
-		System.out.println(id);
 		sendMessage(id);
 	}
 
