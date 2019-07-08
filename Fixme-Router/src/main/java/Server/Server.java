@@ -22,20 +22,27 @@ public class Server {
 
     public static void main(String[] args) {
 
-//        RouterAsync routerBrokerAsync = new RouterAsync(brokerPort);
+        RouterAsync routerBrokerAsync = new RouterAsync(brokerPort);
         RouterAsync routerMarketAsync = new RouterAsync(marketPort);
-//        routerBrokerAsync.start();
+        routerBrokerAsync.start();
         routerMarketAsync.start();
 
 
         while (true){
             marketMessages = routerMarketAsync.getMessages();
             // TODO -- message parusing is required. And extracting UUID from it.
+            if (marketMessages.size() > 0 )
+                System.out.println(marketMessages.size());
             if (marketMessages.size() > 0 && routerMarketAsync.getClientList().size() > 0) {
                 routerMarketAsync.sendMessage(marketMessages.get(0), routerMarketAsync.getClientList().get(0).getUuid());
-                marketMessages.clear();
+//                marketMessages.clear();
             }
 //            brokerMessages = routerBrokerAsync.getMessages();
+//            // TODO -- message parusing is required. And extracting UUID from it.
+//            if (brokerMessages.size() > 0 && routerBrokerAsync.getClientList().size() > 0) {
+//                routerBrokerAsync.sendMessage(brokerMessages.get(0), routerBrokerAsync.getClientList().get(0).getUuid());
+////                brokerMessages.clear();
+//            }
         }
     }
 

@@ -32,14 +32,14 @@ public class RouterAsync extends Thread {
 
 					SocketHandlerAsync socketHandlerAsync = new SocketHandlerAsync(client);
 					clientList.add(socketHandlerAsync);
-					System.out.println("Added Client: " + socketHandlerAsync.getUuid().toString());
+					System.out.println("Server "+ this.port + " Added New Client: " + socketHandlerAsync.getUuid().toString());
 
 
 					ByteBuffer buffer = ByteBuffer.allocate(1024);
 					Future<Integer> readval = client.read(buffer);		// readers from client
 
 					String clientMessage =  new String(buffer.array()).trim();
-					System.out.println("Received from client: "	+clientMessage);
+					System.out.println("Server "+ this.port + " Received Message from Client: "	+ clientMessage);
 					messages.add(clientMessage);
 					readval.get();
 					buffer.flip();
