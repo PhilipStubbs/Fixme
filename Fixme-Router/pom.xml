@@ -11,5 +11,11 @@
 
     <artifactId>Fixme-Router</artifactId>
 
-
+    <dependencies>
+        <dependency>
+            <groupId>Fixme</groupId>
+            <artifactId>Fixme-Core</artifactId>
+            <version>1.0-SNAPSHOT</version>
+        </dependency>
+    </dependencies>
 </project>

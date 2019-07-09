@@ -1,10 +1,9 @@
-package Client;
+package BaseClient;
 
-import Server.RouterAsync;
+import Responsibilty.AbstractLogger;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
-import java.net.StandardSocketOptions;
 import java.nio.ByteBuffer;
 import java.nio.channels.AsynchronousSocketChannel;
 import java.util.ArrayList;
@@ -14,27 +13,39 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
-public class Client {
-	private int port;
-	private AsynchronousSocketChannel client;
-	private List<String> messages = new ArrayList<String>();
+import static Responsibilty.AbstractLogger.INFO;
+import static Responsibilty.Logger.getChainOfLoggers;
 
-	public Client(int port){
+public class BaseClient {
+	protected int port;
+	protected AsynchronousSocketChannel client;
+	protected List<String> messages = new ArrayList<String>();
+	protected String id;
+	protected AbstractLogger logger = getChainOfLoggers();
+
+	public BaseClient(int port){
 		this.port = port;
 		try (AsynchronousSocketChannel client = AsynchronousSocketChannel.open()) {
 			Future<Void> result = client.connect(new InetSocketAddress("127.0.0.1", port));
 			this.client = client;
-
 			result.get();
+
+			/* Awaiting for ID from Router	*/
+			logger.logMessage(1, "Awaiting ID");
+			getServerMessage();
+			id = messages.get(0);
+			messages.clear();
+			logger.logMessage(1,"ID Assigned :"+id);
+
+
 			Random rn = new Random();
 
-
+			// TODO -- proper logic for messaging.
 			while (true) {
 				sendServerMessage("test" + rn.nextInt());
 				TimeUnit.SECONDS.sleep(1);
 				getServerMessage();
 			}
-		// TODO -- seems like we might have to put market code in here. Else the connection closes.
 
 		}
 		catch (ExecutionException | IOException e) {
@@ -42,11 +53,10 @@ public class Client {
 		}
 		catch (InterruptedException e) {
 			System.out.println("Disconnected from the server.");
-		} finally {
-			System.out.println("finally"+client.isOpen());
-
 		}
 	}
+
+	public BaseClient(){};
 
 	public void getServerMessage() {
 		try {
@@ -55,7 +65,7 @@ public class Client {
 			Future<Integer> readval = client.read(buffer);                // fetches from server
 			readval.get();
 			String message = new String(buffer.array()).trim();
-			System.out.println("Received from server: " + message);
+			logger.logMessage(2 ,"Received from server: " + message);
 			messages.add(message);
 
 		} catch (ExecutionException | InterruptedException e){
@@ -67,23 +77,19 @@ public class Client {
 		try {
 			ByteBuffer buffer = ByteBuffer.wrap(message.getBytes());
 			Future<Integer> writeval = client.write(buffer);				//writes to server
-			System.out.println("Writing to server: "+message);
+			logger.logMessage(2 ,"Writing to server: "+message);
 			writeval.get();
 		} catch (ExecutionException | InterruptedException e){
 			e.printStackTrace();
 		}
 	}
 
-	public void terminateConnection(RouterAsync router) {
+	public void terminateConnection() {
 		try {
-			router.getClientList().remove(this);
-		} finally {
-			try {
-				System.out.println("Connection Terminated");
-				client.close();
-			} catch (IOException e) {
-				// NO OP
-			}
+			logger.logMessage(INFO,"Connection Terminated");
+			client.close();
+		} catch (IOException e) {
+			// NO OP
 		}
 	}
 
