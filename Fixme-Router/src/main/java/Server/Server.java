@@ -24,16 +24,16 @@ public class Server {
 
     public static void main(String[] args) {
 
-//        RouterAsync routerBrokerAsync = new RouterAsync(brokerPort);
+        RouterAsync routerBrokerAsync = new RouterAsync(brokerPort);
         RouterAsync routerMarketAsync = new RouterAsync(marketPort);
-//        routerBrokerAsync.start();
+        routerBrokerAsync.start();
         routerMarketAsync.start();
 
 
         while (true) {
             try {
                 marketClientList = routerMarketAsync.getClientList();
-//                brokerClientList = routerBrokerAsync.getClientList();
+                brokerClientList = routerBrokerAsync.getClientList();
                 marketMessages = routerMarketAsync.getMessages();
 
                 // TODO -- message parusing is required. And extracting UUID from it.

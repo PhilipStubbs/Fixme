@@ -6,6 +6,8 @@ import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
 import java.nio.channels.AsynchronousSocketChannel;
+import java.util.NoSuchElementException;
+import java.util.Scanner;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
@@ -21,27 +23,32 @@ public class Client {
 			Future<Void> result = client.connect(new InetSocketAddress("127.0.0.1", port));
 
 			result.get();
-			String str= "Hello! How are you?";
 
-			TimeUnit.SECONDS.sleep(5);
+			Scanner scanner = new Scanner(System.in);
+			try {
+				while (true) {
+					System.out.println("Please input a line");
+					String line = scanner.nextLine();
+					System.out.printf("User input was: %s%n", line);
 
-			ByteBuffer buffer = ByteBuffer.wrap(str.getBytes());
+					ByteBuffer buffer = ByteBuffer.wrap(line.getBytes());
 
-			Future<Integer> writeval = client.write(buffer);			// sends to server
-			System.out.println("Writing to server: "+str);
+					Future<Integer> writeval = client.write(buffer);			// sends to server
+					System.out.println("Writing to server: "+line);
 
-			writeval.get();
-			buffer.flip();
+					writeval.get();
+					buffer.flip();
 
-			Future<Integer> readval = client.read(buffer);				// fetches from server
-
-
-			System.out.println("Received from server: "	+new String(buffer.array()).trim());
-
-
-			readval.get();
-			buffer.clear();
-
+					Future<Integer> readval = client.read(buffer);
+					readval.get();
+					System.out.println("Received from server: "	+ new String(buffer.array()).trim());
+					System.out.println("After Test");
+					buffer.clear();
+				}
+			} catch(IllegalStateException | NoSuchElementException e) {
+				// System.in has been closed
+				System.out.println("System.in was closed; exiting");
+			}
 		}
 		catch (ExecutionException | IOException e) {
 			e.printStackTrace();
