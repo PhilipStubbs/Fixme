@@ -17,9 +17,8 @@ public abstract class AbstractLogger {
     }
 
     public void logMessage(int level, String message){
-        if(this.level <= level){
-            write(message);
-        }
+        setLevel(level);
+        write(message);
         if(nextLogger !=null){
             nextLogger.logMessage(level, message);
         }
@@ -27,4 +26,8 @@ public abstract class AbstractLogger {
 
     abstract protected void write(String message);
 
+    public AbstractLogger setLevel(int level) {
+        this.level = level;
+        return this;
+    }
 }

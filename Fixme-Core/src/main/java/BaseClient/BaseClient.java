@@ -17,11 +17,11 @@ import static Responsibilty.AbstractLogger.INFO;
 import static Responsibilty.Logger.getChainOfLoggers;
 
 public class BaseClient {
-	private int port;
-	private AsynchronousSocketChannel client;
-	private List<String> messages = new ArrayList<String>();
-	private String id;
-	private AbstractLogger logger = getChainOfLoggers();
+	protected int port;
+	protected AsynchronousSocketChannel client;
+	protected List<String> messages = new ArrayList<String>();
+	protected String id;
+	protected AbstractLogger logger = getChainOfLoggers();
 
 	public BaseClient(int port){
 		this.port = port;
@@ -31,11 +31,11 @@ public class BaseClient {
 			result.get();
 
 			/* Awaiting for ID from Router	*/
-			logger.logMessage(INFO, "Awaiting ID");
+			logger.logMessage(1, "Awaiting ID");
 			getServerMessage();
 			id = messages.get(0);
 			messages.clear();
-			logger.logMessage(INFO,"ID Assigned :"+id);
+			logger.logMessage(1,"ID Assigned :"+id);
 
 
 			Random rn = new Random();
@@ -58,6 +58,8 @@ public class BaseClient {
 
 		}
 	}
+
+	public BaseClient(){};
 
 	public void getServerMessage() {
 		try {

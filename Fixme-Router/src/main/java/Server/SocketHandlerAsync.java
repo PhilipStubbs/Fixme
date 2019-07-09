@@ -14,12 +14,12 @@ public class SocketHandlerAsync extends Thread{
 	private List<String> messages;
 	private String id;
 
-	public SocketHandlerAsync(AsynchronousSocketChannel socket, List<String> messages){
+	public SocketHandlerAsync(AsynchronousSocketChannel socket, int clientListSize ,List<String> messages){
 		this.socket = socket;
 		this.messages = messages;
 		String epochString = String.valueOf(Instant.now().toEpochMilli());
 		this.id = epochString.substring(7);
-		sendMessage(id);
+		sendMessage(id + " " + clientListSize);
 	}
 
 	@Override

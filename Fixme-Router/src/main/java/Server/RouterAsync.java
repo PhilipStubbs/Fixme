@@ -35,7 +35,7 @@ public class RouterAsync extends Thread {
 				Future<AsynchronousSocketChannel> acceptCon = server.accept();
 				AsynchronousSocketChannel client = acceptCon.get();
 				// TODO
-				SocketHandlerAsync socketHandlerAsync = new SocketHandlerAsync(client, messages);
+				SocketHandlerAsync socketHandlerAsync = new SocketHandlerAsync(client, clientList.size() ,messages);
 				logger.logMessage(INFO,"Added Client: " + socketHandlerAsync.getClientId());
 				clientList.add(socketHandlerAsync);
 				socketHandlerAsync.start();
