@@ -5,10 +5,12 @@ import java.util.ArrayList;
 
 public class RoutingTable {
 
-    static private ArrayList<ArrayList<SocketHandlerAsync>> routingTable = new ArrayList<ArrayList<SocketHandlerAsync>>();
+    static private ArrayList<ArrayList<SocketHandlerAsync>> routingTable;
 
 
     public static void updateRoutingTable(SocketHandlerAsync newMarket){
+        if (routingTable == null)
+            routingTable = new ArrayList<ArrayList<SocketHandlerAsync>>();
         try {
             routingTable.get(newMarket.getIndex()).add(newMarket);
         } catch (IndexOutOfBoundsException e){
@@ -19,6 +21,9 @@ public class RoutingTable {
     }
 
     public static ArrayList<ArrayList<SocketHandlerAsync>> getRoutingTable() {
-        return routingTable;
+        if (routingTable != null)
+            return routingTable;
+        else
+            return new ArrayList<ArrayList<SocketHandlerAsync>>();
     }
 }

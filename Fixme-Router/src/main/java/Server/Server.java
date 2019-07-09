@@ -37,8 +37,9 @@ public class Server {
                 routingTable = RoutingTable.getRoutingTable();
 
 
-                outputRoutingTable();
+
                 // TODO -- message parusing is required. And extracting UUID from it.
+                outputRoutingTable();
                 TimeUnit.SECONDS.sleep(1);
                 if (marketMessages.size() > 0 && marketClientList.size() > 0) {
                     logger.logMessage(2, "Market Server Port:5001 msg:"+marketMessages.size() +" client:"+marketClientList.size());
