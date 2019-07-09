@@ -32,7 +32,7 @@ public class MarketClient extends BaseClient {
 				index = Integer.parseInt(split[1]);
 
 				messages.clear();
-				logger.logMessage(1,"ID Assigned :"+id);
+				logger.logMessage(1,"ID Assigned: "+id);
 				logger.logMessage(1,"We Sell: "+ Instruments.instruments[index]);
 
 
