@@ -9,6 +9,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Future;
 
+import static Responsibilty.AbstractLogger.DEBUG;
 import static Responsibilty.AbstractLogger.ERROR;
 import static Responsibilty.AbstractLogger.INFO;
 import static Responsibilty.Logger.getChainOfLoggers;
@@ -29,7 +30,7 @@ public class RouterAsync extends Thread {
 		try {
 			AsynchronousServerSocketChannel server = AsynchronousServerSocketChannel.open().bind(new InetSocketAddress("127.0.0.1", port));
 
-			System.out.println("Server listening on :"+port);
+			logger.logMessage(1,"Server listening on :"+port);
 
 			while(true){
 				Future<AsynchronousSocketChannel> acceptCon = server.accept();
@@ -64,7 +65,7 @@ public class RouterAsync extends Thread {
 			if (socketHandlerAsync != null) {
 				String message = str + " " + id;												// message
 				socketHandlerAsync.sendMessage(message);
-				System.out.println("Writing back to client: " + message);
+				logger.logMessage(DEBUG,"Writing back to client: " + message);
 			} else {
 				logger.logMessage(ERROR,getClass().getSimpleName() + "> failed to send message to :"+ id);
 			}

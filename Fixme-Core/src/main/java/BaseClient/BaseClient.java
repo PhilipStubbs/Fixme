@@ -53,9 +53,6 @@ public class BaseClient {
 		}
 		catch (InterruptedException e) {
 			System.out.println("Disconnected from the server.");
-		} finally {
-			System.out.println("finally"+client.isOpen());
-
 		}
 	}
 
@@ -68,7 +65,7 @@ public class BaseClient {
 			Future<Integer> readval = client.read(buffer);                // fetches from server
 			readval.get();
 			String message = new String(buffer.array()).trim();
-			System.out.println("Received from server: " + message);
+			logger.logMessage(2 ,"Received from server: " + message);
 			messages.add(message);
 
 		} catch (ExecutionException | InterruptedException e){
@@ -80,7 +77,7 @@ public class BaseClient {
 		try {
 			ByteBuffer buffer = ByteBuffer.wrap(message.getBytes());
 			Future<Integer> writeval = client.write(buffer);				//writes to server
-			System.out.println("Writing to server: "+message);
+			logger.logMessage(2 ,"Writing to server: "+message);
 			writeval.get();
 		} catch (ExecutionException | InterruptedException e){
 			e.printStackTrace();

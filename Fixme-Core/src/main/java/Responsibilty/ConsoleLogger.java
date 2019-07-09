@@ -17,7 +17,6 @@ public class ConsoleLogger extends AbstractLogger {
 
     @Override
     protected void write(String message) {
-        System.out.println("levle"+ this.level);
         switch (this.level)
         {
             case 1 :

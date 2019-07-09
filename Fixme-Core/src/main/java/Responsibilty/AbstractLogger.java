@@ -17,10 +17,12 @@ public abstract class AbstractLogger {
     }
 
     public void logMessage(int level, String message){
+
         setLevel(level);
-        write(message);
         if(nextLogger !=null){
             nextLogger.logMessage(level, message);
+        } else {
+            write(message);
         }
     }
 

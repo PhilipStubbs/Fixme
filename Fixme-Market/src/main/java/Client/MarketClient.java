@@ -13,10 +13,11 @@ import java.util.concurrent.TimeUnit;
 public class MarketClient extends BaseClient {
 	String[] instruments = {"Gold", "Silver", "Bitcoin", "Red Sugar", "Morkite", "Apoca Bloom"};
 	int index;
+	int	stock;
 
 	public MarketClient(int port) {
 			this.port = port;
-
+			stock = 100;
 			try (AsynchronousSocketChannel client = AsynchronousSocketChannel.open()) {
 				Future<Void> result = client.connect(new InetSocketAddress("127.0.0.1", port));
 				this.client = client;

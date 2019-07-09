@@ -1,5 +1,7 @@
 package Server;
 
+import Responsibilty.AbstractLogger;
+
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.AsynchronousSocketChannel;
@@ -9,10 +11,14 @@ import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 
+import static Responsibilty.Logger.getChainOfLoggers;
+
 public class SocketHandlerAsync extends Thread{
 	private AsynchronousSocketChannel socket;
 	private List<String> messages;
 	private String id;
+	private AbstractLogger logger = getChainOfLoggers();
+
 
 	public SocketHandlerAsync(AsynchronousSocketChannel socket, int clientListSize ,List<String> messages){
 		this.socket = socket;
@@ -35,7 +41,7 @@ public class SocketHandlerAsync extends Thread{
 
 
 					String clientMessage =  new String(buffer.array()).trim();
-					System.out.println("Received from client: "	+clientMessage);
+					logger.logMessage(2, "Received from client: "	+clientMessage);
 					// TODO -- get messages out of thread and into RouterAsync.
 					messages.add(clientMessage);
 					buffer.flip();
@@ -44,7 +50,7 @@ public class SocketHandlerAsync extends Thread{
 			}
 
 		} catch (Exception e){
-			System.out.println("Error: " + e.getLocalizedMessage());
+			logger.logMessage(3, "Error: " + e.getLocalizedMessage());
 		} finally {
 			try {
 				socket.close();
@@ -63,7 +69,7 @@ public class SocketHandlerAsync extends Thread{
 				writeVal.get();
 		}
 		 catch (InterruptedException | ExecutionException e){
-			System.out.println(getClass().getSimpleName()+"> Server Exception "+ e.getLocalizedMessage());
+			 logger.logMessage(3, getClass().getSimpleName()+"> Server Exception "+ e.getLocalizedMessage());
 		}
 	}
 
