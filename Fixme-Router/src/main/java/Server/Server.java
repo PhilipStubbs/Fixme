@@ -1,6 +1,8 @@
 package Server;
 
+import Instruments.Instruments;
 import Responsibilty.AbstractLogger;
+import Server.RoutingTable.RoutingTable;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -16,6 +18,7 @@ public class Server {
     static private  List<SocketHandlerAsync> marketClientList = new ArrayList<SocketHandlerAsync>();
     static private  List<SocketHandlerAsync> brokerClientList = new ArrayList<SocketHandlerAsync>();
     protected static AbstractLogger logger = getChainOfLoggers();
+    static private ArrayList<ArrayList<SocketHandlerAsync>> routingTable;
 
     public static void main(String[] args) {
 
@@ -31,7 +34,10 @@ public class Server {
                 brokerClientList = routerBrokerAsync.getClientList();
                 marketMessages = routerMarketAsync.getMessages();
                 brokerMessages = routerBrokerAsync.getMessages();
+                routingTable = RoutingTable.getRoutingTable();
 
+
+                outputRoutingTable();
                 // TODO -- message parusing is required. And extracting UUID from it.
                 TimeUnit.SECONDS.sleep(1);
                 if (marketMessages.size() > 0 && marketClientList.size() > 0) {
@@ -50,6 +56,19 @@ public class Server {
             }
         }
     }
+
+    static private void outputRoutingTable(){
+        String tmp = "";
+        for (int i = 0 ; i < routingTable.size(); i++){
+            tmp += Instruments.instruments[i]+ " -> ";
+            for (int x = 0; x < routingTable.get(i).size(); x++){
+               tmp += routingTable.get(i).get(x).getClientId() +" ";
+            }
+            logger.logMessage(2, tmp);
+            tmp = "";
+        }
+    }
+
 
 }
 

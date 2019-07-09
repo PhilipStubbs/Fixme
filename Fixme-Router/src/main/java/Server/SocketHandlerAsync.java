@@ -18,6 +18,7 @@ public class SocketHandlerAsync extends Thread{
 	private List<String> messages;
 	private String id;
 	private AbstractLogger logger = getChainOfLoggers();
+	private int index;
 
 
 	public SocketHandlerAsync(AsynchronousSocketChannel socket, int clientListSize ,List<String> messages){
@@ -25,7 +26,10 @@ public class SocketHandlerAsync extends Thread{
 		this.messages = messages;
 		String epochString = String.valueOf(Instant.now().toEpochMilli());
 		this.id = epochString.substring(7);
-		sendMessage(id + " " + clientListSize);
+
+		int tmpInt = clientListSize;
+		index = tmpInt > 5 ? tmpInt % 6 : tmpInt;
+		sendMessage(id + " " + index);
 	}
 
 	@Override
@@ -42,7 +46,7 @@ public class SocketHandlerAsync extends Thread{
 
 					String clientMessage =  new String(buffer.array()).trim();
 					logger.logMessage(2, "Received from client: "	+clientMessage);
-					// TODO -- get messages out of thread and into RouterAsync.
+
 					messages.add(clientMessage);
 					buffer.flip();
 					buffer.clear();
@@ -76,6 +80,10 @@ public class SocketHandlerAsync extends Thread{
 
 	public String getClientId() {
 		return id;
+	}
+
+	public int getIndex() {
+		return index;
 	}
 
 	public AsynchronousSocketChannel getSocket() {
