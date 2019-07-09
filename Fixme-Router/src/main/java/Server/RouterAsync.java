@@ -1,53 +1,46 @@
 package Server;
 
+import Responsibilty.AbstractLogger;
+
 import java.net.InetSocketAddress;
-import java.nio.ByteBuffer;
 import java.nio.channels.AsynchronousServerSocketChannel;
 import java.nio.channels.AsynchronousSocketChannel;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.UUID;
 import java.util.concurrent.Future;
+
+import static Responsibilty.AbstractLogger.DEBUG;
+import static Responsibilty.AbstractLogger.ERROR;
+import static Responsibilty.AbstractLogger.INFO;
+import static Responsibilty.Logger.getChainOfLoggers;
 
 public class RouterAsync extends Thread {
 	private int port;
-	private List<SocketHandlerAsync> clientList = new ArrayList<SocketHandlerAsync>();
+	private List<SocketHandlerAsync> clientList;
 	private List<String> messages = new ArrayList<String>();
+	private AbstractLogger logger = getChainOfLoggers();
+
 
 
 	public RouterAsync(int port){
 		this.port = port;
+		clientList = new ArrayList<SocketHandlerAsync>();
 	}
 
 	private void startServer(){
 		try {
 			AsynchronousServerSocketChannel server = AsynchronousServerSocketChannel.open().bind(new InetSocketAddress("127.0.0.1", port));
 
-			System.out.println("Server listening on :"+port);
+			logger.logMessage(1,"Server listening on :"+port);
 
 			while(true){
 				Future<AsynchronousSocketChannel> acceptCon = server.accept();
 				AsynchronousSocketChannel client = acceptCon.get();
-				if ((client!= null) && (client.isOpen())) {
-
-					SocketHandlerAsync socketHandlerAsync = new SocketHandlerAsync(client);
-					clientList.add(socketHandlerAsync);
-					System.out.println("Added Client: " + socketHandlerAsync.getUuid().toString());
-
-
-					ByteBuffer buffer = ByteBuffer.allocate(1024);
-					Future<Integer> readval = client.read(buffer);		// readers from client
-
-					String clientMessage =  new String(buffer.array()).trim();
-					System.out.println("Received from client: "	+clientMessage);
-					messages.add(clientMessage);
-					readval.get();
-					buffer.flip();
-
-
-					buffer.clear();
-
-				}
+				// TODO
+				SocketHandlerAsync socketHandlerAsync = new SocketHandlerAsync(client, clientList.size() ,messages);
+				logger.logMessage(INFO,"Added Client: " + socketHandlerAsync.getClientId());
+				clientList.add(socketHandlerAsync);
+				socketHandlerAsync.start();
 			}
 
 		}  catch (Exception e){
@@ -60,32 +53,29 @@ public class RouterAsync extends Thread {
 		startServer();
 	}
 
-	public void sendMessage(String str, UUID uuid){
+	public void sendMessage(String str, String id) {
 		try {
 			SocketHandlerAsync socketHandlerAsync = null;
 			for (int i = 0; i < clientList.size(); i++)
 			{
-				if (clientList.get(i).getUuid() == uuid)
+				if (clientList.get(i).getClientId().contains(id))
 				{
 					socketHandlerAsync = clientList.get(i);
 				}
 			}
 			if (socketHandlerAsync != null) {
-				AsynchronousSocketChannel client = socketHandlerAsync.getSocket();
-				String message = str +  uuid.toString();
-				ByteBuffer messageByteBuffer = ByteBuffer.allocate(message.length());
-				messageByteBuffer.wrap(message.getBytes());
-
-				Future<Integer> writeVal = client.write(messageByteBuffer.wrap(message.getBytes()));        // writes to client
-
-				System.out.println("Writing back to client: " + message);
-				writeVal.get();
+				String message = str + " " + id;												// message
+				socketHandlerAsync.sendMessage(message);
+				logger.logMessage(DEBUG,"Writing back to client: " + message);
 			} else {
-				System.out.println(getClass().getSimpleName() + "> failed to send message to :"+ uuid);
+				logger.logMessage(ERROR,getClass().getSimpleName() + "> failed to send message to :"+ id);
 			}
 
 		} catch (Exception e){
-			System.out.println("Server Exception "+ e.getLocalizedMessage());
+			logger.logMessage(ERROR,getClass().getSimpleName()+"> Server Exception "+ e.getLocalizedMessage());
+		}
+		finally {
+			messages.remove(str);
 		}
 	}
 
