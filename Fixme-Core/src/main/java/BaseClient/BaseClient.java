@@ -91,6 +91,8 @@ public class BaseClient {
 			client.close();
 		} catch (IOException e) {
 			// NO OP
+		} finally {
+			System.exit(0);
 		}
 	}
 

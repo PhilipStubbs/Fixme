@@ -10,6 +10,7 @@ import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 
+import static Responsibilty.AbstractLogger.INFO;
 import static Responsibilty.Logger.getChainOfLoggers;
 
 public class SocketHandlerAsync extends Thread{
@@ -18,6 +19,7 @@ public class SocketHandlerAsync extends Thread{
 	private String id;
 	private AbstractLogger logger = getChainOfLoggers();
 	private int index;
+	private boolean isAlive;
 
 
 	public SocketHandlerAsync(AsynchronousSocketChannel socket, int clientListSize ,List<String> messages){
@@ -25,7 +27,7 @@ public class SocketHandlerAsync extends Thread{
 		this.messages = messages;
 		String epochString = String.valueOf(Instant.now().toEpochMilli());
 		this.id = epochString.substring(7);
-
+		this.isAlive = true;
 		int tmpInt = clientListSize;
 		index = tmpInt > 5 ? tmpInt % 6 : tmpInt;
 		sendMessage(id + " " + index);
@@ -34,9 +36,8 @@ public class SocketHandlerAsync extends Thread{
 	@Override
 	public void run() {
 		try {
-
-			while(true){
-				if ((socket!= null) && (socket.isOpen())) {
+			while(this.isAlive){
+				if ((socket!= null) && (socket.isOpen()) && this.isAlive) {
 
 					ByteBuffer buffer = ByteBuffer.allocate(1024);
 					Future<Integer> readval = socket.read(buffer);		// readers from client
@@ -44,7 +45,7 @@ public class SocketHandlerAsync extends Thread{
 
 
 					String clientMessage =  new String(buffer.array()).trim();
-					logger.logMessage(2, "Received from client: "	+clientMessage);
+//					logger.logMessage(2, "Received from client: "	+clientMessage);
 
 					messages.add(clientMessage);
 					buffer.flip();
@@ -53,13 +54,9 @@ public class SocketHandlerAsync extends Thread{
 			}
 
 		} catch (Exception e){
-			logger.logMessage(3, "Error: " + e.getLocalizedMessage());
+			logger.logMessage(3, getClass().getSimpleName()+"> Error: " + e.getLocalizedMessage());
 		} finally {
-			try {
-				socket.close();
-			} catch (IOException e){
-				// NO OP
-			}
+			terminateConnection();
 		}
 	}
 
@@ -73,6 +70,19 @@ public class SocketHandlerAsync extends Thread{
 		}
 		 catch (InterruptedException | ExecutionException e){
 			 logger.logMessage(3, getClass().getSimpleName()+"> Server Exception "+ e.getLocalizedMessage());
+			 terminateConnection();
+		}
+	}
+
+	public void terminateConnection() {
+		try {
+			logger.logMessage(INFO,"Connection Terminated");
+			socket.close();
+		} catch (IOException e) {
+			// NO OP
+		} finally {
+			this.isAlive = false;
+			Thread.interrupted();
 		}
 	}
 

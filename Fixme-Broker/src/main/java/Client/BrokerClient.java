@@ -37,6 +37,10 @@ public class BrokerClient extends BaseClient {
 				while (true) {
 					System.out.println("Please input a line");
 					String line = scanner.nextLine();
+					if (line.toLowerCase().equals("exit")){
+						this.terminateConnection();
+						return;
+					}
 					System.out.printf("User input was: %s%n", line);
 					sendServerMessage(line);
 					TimeUnit.SECONDS.sleep(1);
