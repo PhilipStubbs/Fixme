@@ -1,12 +1,15 @@
 package Server;
 
 import Responsibilty.AbstractLogger;
+import Server.RoutingTable.RoutingTable;
 
+import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.nio.channels.AsynchronousServerSocketChannel;
 import java.nio.channels.AsynchronousSocketChannel;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 
 import static Responsibilty.AbstractLogger.DEBUG;
@@ -36,15 +39,18 @@ public class RouterAsync extends Thread {
 			while(true){
 				Future<AsynchronousSocketChannel> acceptCon = server.accept();
 				AsynchronousSocketChannel client = acceptCon.get();
-				// TODO
+
 				SocketHandlerAsync socketHandlerAsync = new SocketHandlerAsync(client, clientList.size() ,messages);
 				logger.logMessage(INFO,"Added Client: " + socketHandlerAsync.getClientId());
 				clientList.add(socketHandlerAsync);
+				if (port == 5001)
+					RoutingTable.updateRoutingTable(socketHandlerAsync);
+
 				socketHandlerAsync.start();
 			}
 
-		}  catch (Exception e){
-			System.out.println("Server Exception "+ e.getLocalizedMessage());
+		}  catch (InterruptedException | ExecutionException | IOException e){
+			logger.logMessage(3,getClass().getSimpleName() + "> Server Exception "+ e.getLocalizedMessage());
 		}
 	}
 

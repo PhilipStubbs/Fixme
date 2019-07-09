@@ -9,9 +9,10 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
+import Instruments.Instruments;
+
 
 public class MarketClient extends BaseClient {
-	String[] instruments = {"Gold", "Silver", "Bitcoin", "Red Sugar", "Morkite", "Apoca Bloom"};
 	int index;
 	int	stock;
 
@@ -27,19 +28,18 @@ public class MarketClient extends BaseClient {
 				logger.logMessage(1, "Awaiting ID");
 				getServerMessage();
 				String[] split = messages.get(0).split(" ");
-				int tmpInt = Integer.parseInt(split[1]);
 				id = split[0];
-				index = tmpInt > 5 ? tmpInt % 6 : tmpInt;
+				index = Integer.parseInt(split[1]);
 
 				messages.clear();
 				logger.logMessage(1,"ID Assigned :"+id);
-				logger.logMessage(1,"We Sell :"+ instruments[index]);
+				logger.logMessage(1,"We Sell: "+ Instruments.instruments[index]);
 
 
 				while (true) {
-					sendServerMessage("test");
-					TimeUnit.SECONDS.sleep(1);
-					getServerMessage();
+//					sendServerMessage("test");
+//					TimeUnit.SECONDS.sleep(1);
+//					getServerMessage();
 				}
 
 			}
