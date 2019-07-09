@@ -16,7 +16,7 @@ import static Responsibilty.Logger.getChainOfLoggers;
 
 public class RouterAsync extends Thread {
 	private int port;
-	private List<SocketHandlerAsync> clientList = new ArrayList<SocketHandlerAsync>();
+	private List<SocketHandlerAsync> clientList;
 	private List<String> messages = new ArrayList<String>();
 	private AbstractLogger logger = getChainOfLoggers();
 
@@ -24,6 +24,7 @@ public class RouterAsync extends Thread {
 
 	public RouterAsync(int port){
 		this.port = port;
+		clientList = new ArrayList<SocketHandlerAsync>();
 	}
 
 	private void startServer(){
@@ -57,7 +58,7 @@ public class RouterAsync extends Thread {
 			SocketHandlerAsync socketHandlerAsync = null;
 			for (int i = 0; i < clientList.size(); i++)
 			{
-				if (clientList.get(i).getClientId().equals(id))
+				if (clientList.get(i).getClientId().contains(id))
 				{
 					socketHandlerAsync = clientList.get(i);
 				}
@@ -72,6 +73,9 @@ public class RouterAsync extends Thread {
 
 		} catch (Exception e){
 			logger.logMessage(ERROR,getClass().getSimpleName()+"> Server Exception "+ e.getLocalizedMessage());
+		}
+		finally {
+			messages.remove(str);
 		}
 	}
 

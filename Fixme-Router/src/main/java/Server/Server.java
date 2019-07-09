@@ -30,16 +30,21 @@ public class Server {
                 marketClientList = routerMarketAsync.getClientList();
                 brokerClientList = routerBrokerAsync.getClientList();
                 marketMessages = routerMarketAsync.getMessages();
+                brokerMessages = routerBrokerAsync.getMessages();
 
                 // TODO -- message parusing is required. And extracting UUID from it.
                 TimeUnit.SECONDS.sleep(1);
-                logger.logMessage(2, "msg:"+marketMessages.size() +" client:"+marketClientList.size());
                 if (marketMessages.size() > 0 && marketClientList.size() > 0) {
+                    logger.logMessage(2, "Market Server Port:5001 msg:"+marketMessages.size() +" client:"+marketClientList.size());
                     String tmpMessage = marketMessages.get(0);
                     routerMarketAsync.sendMessage(tmpMessage, routerMarketAsync.getClientList().get(0).getClientId());
-                    marketMessages.remove(tmpMessage);
                 }
-//            brokerMessages = routerBrokerAsync.getMessages();
+
+                if (brokerMessages.size() > 0 && brokerClientList.size() > 0) {
+                    logger.logMessage(2, "Broker Server Port:5000 msg:"+brokerMessages.size() +" client:"+brokerClientList.size());
+                    String tmpMessage = brokerMessages.get(0);
+                    routerBrokerAsync.sendMessage(tmpMessage, routerBrokerAsync.getClientList().get(0).getClientId());
+                }
             } catch (Exception e) {
                 e.printStackTrace();
             }

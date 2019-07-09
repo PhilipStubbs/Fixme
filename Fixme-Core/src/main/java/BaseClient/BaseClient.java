@@ -60,7 +60,7 @@ public class BaseClient {
 
 	public void getServerMessage() {
 		try {
-			System.out.println(client.isOpen());
+			logger.logMessage(2 ,"Is client open " + client.isOpen());
 			ByteBuffer buffer = ByteBuffer.allocate(1024);				// TODO -- find better way to allocate buffersize
 			Future<Integer> readval = client.read(buffer);                // fetches from server
 			readval.get();
@@ -75,6 +75,7 @@ public class BaseClient {
 
 	public void sendServerMessage(String message){
 		try {
+			System.out.println(message);
 			ByteBuffer buffer = ByteBuffer.wrap(message.getBytes());
 			Future<Integer> writeval = client.write(buffer);				//writes to server
 			logger.logMessage(2 ,"Writing to server: "+message);

@@ -1,5 +1,7 @@
 package Client;
 
+import BaseClient.BaseClient;
+
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
@@ -10,9 +12,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
-public class BrokerClient {
-	private int port;
-	private AsynchronousSocketChannel client;
+public class BrokerClient extends BaseClient {
 
 	public BrokerClient(int port){
 		this.port = port;
@@ -22,26 +22,26 @@ public class BrokerClient {
 
 			result.get();
 
+			/* Awaiting for ID from Router	*/
+			logger.logMessage(1, "Awaiting ID");
+			getServerMessage();
+			String[] split = messages.get(0).split(" ");
+			int tmpInt = Integer.parseInt(split[1]);
+			id = split[0];
+
+			messages.clear();
+			logger.logMessage(1,"ID Assigned :"+id);
+
 			Scanner scanner = new Scanner(System.in);
 			try {
 				while (true) {
 					System.out.println("Please input a line");
 					String line = scanner.nextLine();
 					System.out.printf("User input was: %s%n", line);
+					sendServerMessage(line);
+					TimeUnit.SECONDS.sleep(1);
 
-					ByteBuffer buffer = ByteBuffer.wrap(line.getBytes());
-
-					Future<Integer> writeval = client.write(buffer);			// sends to server
-					System.out.println("Writing to server: "+line);
-
-					writeval.get();
-					buffer.flip();
-
-					Future<Integer> readval = client.read(buffer);
-					readval.get();
-					System.out.println("Received from server: "	+ new String(buffer.array()).trim());
-					System.out.println("After Test");
-					buffer.clear();
+					getServerMessage();
 				}
 			} catch(IllegalStateException | NoSuchElementException e) {
 				// System.in has been closed
