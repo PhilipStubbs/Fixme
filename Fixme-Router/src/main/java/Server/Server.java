@@ -59,8 +59,10 @@ public class Server {
                     }
                     routerBrokerAsync.sendMessage(tmpMessage, routerBrokerAsync.getClientList().get(0).getClientId());
                 }
-            } catch (Exception e) {
+            } catch (InterruptedException e) {
                 e.printStackTrace();
+            } catch (IndexOutOfBoundsException ibe){
+                ibe.printStackTrace();
             }
         }
     }

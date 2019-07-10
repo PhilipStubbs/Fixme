@@ -33,7 +33,7 @@ public class BrokerClient extends BaseClient {
 			logger.logMessage(1, "Awaiting ID");
 			getServerMessage();
 			String[] split = messages.get(0).split(" ");
-			int tmpInt = Integer.parseInt(split[1]);
+			int tmpInt = Integer.parseInt(split[1]);				// TODO client number -> maybe dont need for broker.
 			id = split[0];
 
 			messages.clear();
@@ -42,13 +42,14 @@ public class BrokerClient extends BaseClient {
 			scanner = new Scanner(System.in);
 			try {
 				while (true) {
-					System.out.println("---------Please input a command---------");
-					System.out.println("BUY  - buy an instrument from the markets");
-					System.out.println("SELL - sell an instrument to the markets");
-					System.out.println("EXIT - close connection to the server");
+					logger.logMessage(1,"---------Please input a command---------");
+					logger.logMessage(1,"BUY  - buy an instrument from the markets");
+					logger.logMessage(1,"SELL - sell an instrument to the markets");
+					logger.logMessage(1,"EXIT - close connection to the server");
 
 					String line = scanner.nextLine();
 					if (line.equalsIgnoreCase("exit")){
+						sendServerMessage("exit");
 						this.terminateConnection();
 						break;
 					}
@@ -58,7 +59,7 @@ public class BrokerClient extends BaseClient {
 					else if (line.equalsIgnoreCase("sell")){
 						this.sell();
 					}
-//					System.out.printf("User input was: %s%n", line);
+					logger.logMessage(2, "User input was: "+ line);
 //					sendServerMessage(line);
 					TimeUnit.SECONDS.sleep(1);
 
@@ -66,14 +67,14 @@ public class BrokerClient extends BaseClient {
 				}
 			} catch(IllegalStateException | NoSuchElementException e) {
 				// System.in has been closed
-				System.out.println("System.in was closed; exiting");
+				logger.logMessage(3,"System.in was closed; exiting");
 			}
 		}
 		catch (ExecutionException | IOException e) {
 			e.printStackTrace();
 		}
 		catch (InterruptedException e) {
-			System.out.println("Disconnected from the server.");
+			logger.logMessage(3 ,"Disconnected from the server.");
 		} finally {
 			try {
 				client.close();
@@ -90,31 +91,31 @@ public class BrokerClient extends BaseClient {
 		String quantity = "";
 		String price = "";
 
-		System.out.println("-------Please fill in the following details--------");
-		System.out.println( RoutingTable.getRoutingTable());
+		logger.logMessage(1,"-------Please fill in the following details--------");
+		logger.logMessage(1, RoutingTable.getRoutingTable().toString());
 
-		System.out.println("Enter Instrument You Wish to buy:");
+		logger.logMessage(1,"Enter Instrument You Wish to buy:");
 		while (scanner.hasNext()) {
 			instrument = scanner.nextLine();
 			break;
 			//TODO Check if instrument is in list else get another input
 		}
 
-		System.out.println("Which market would you like to buy from (Please choose their index):");
+		logger.logMessage(1,"Which market would you like to buy from (Please choose their index):");
 		while (scanner.hasNext()) {
 			market = scanner.nextLine();
 			break;
 			//TODO Check if market is in list else get another input
 		}
 
-		System.out.println("How many:");
+		logger.logMessage(1, "How many:");
 		while (scanner.hasNext()) {
 			quantity = scanner.nextLine();
 			break;
 			//TODO Check if quantity is a proper value between 0 - 1000000
 		}
 
-		System.out.println("At what price:");
+		logger.logMessage(1,"At what price:");
 		while (scanner.hasNext()) {
 			price = scanner.nextLine();
 			break;
@@ -137,31 +138,31 @@ public class BrokerClient extends BaseClient {
 		String quantity = "";
 		String price = "";
 
-		System.out.println("-------Please fill in the following details--------");
-		System.out.println( RoutingTable.getRoutingTable());
+		logger.logMessage(1,"-------Please fill in the following details--------");
+		logger.logMessage(1, RoutingTable.getRoutingTable().toString());
 
-		System.out.println("Enter Instrument You Wish to sell:");
+		logger.logMessage(1, "Enter Instrument You Wish to sell:");
 		while (scanner.hasNext()) {
 			instrument = scanner.nextLine();
 			break;
 			//TODO Check if instrument is in brokers list else get another input
 		}
 
-		System.out.println("Which market would you like to sell to (Please choose their index):");
+		logger.logMessage(1,"Which market would you like to sell to (Please choose their index):");
 		while (scanner.hasNext()) {
 			market = scanner.nextLine();
 			break;
 			//TODO Check if market is in list else get another input
 		}
 
-		System.out.println("How many:");
+		logger.logMessage(1,"How many:");
 		while (scanner.hasNext()) {
 			quantity = scanner.nextLine();
 			break;
 			//TODO Check if quantity is a proper value between 0 - 1000000
 		}
 
-		System.out.println("At what price:");
+		logger.logMessage(1, "At what price:");
 		while (scanner.hasNext()) {
 			price = scanner.nextLine();
 			break;
