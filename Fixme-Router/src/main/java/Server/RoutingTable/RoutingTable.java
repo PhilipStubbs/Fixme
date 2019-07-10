@@ -1,13 +1,11 @@
 package Server.RoutingTable;
 
-import Instruments.Instruments;
 import Server.SocketHandlerAsync;
-
 import java.util.ArrayList;
 
 public class RoutingTable {
 
-    static private ArrayList<ArrayList<SocketHandlerAsync>> routingTable = new ArrayList<ArrayList<SocketHandlerAsync>>();
+    static private ArrayList<ArrayList<SocketHandlerAsync>> routingTable = new ArrayList<ArrayList<SocketHandlerAsync>>();;
 
 
     public static void updateRoutingTable(SocketHandlerAsync newMarket){

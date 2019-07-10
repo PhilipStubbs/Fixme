@@ -7,6 +7,7 @@ import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
 import java.nio.channels.AsynchronousSocketChannel;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Random;
 import java.util.concurrent.ExecutionException;
@@ -66,6 +67,19 @@ public class BaseClient {
 			readval.get();
 			String message = new String(buffer.array()).trim();
 			logger.logMessage(2 ,"Received from server: " + message);
+			//TODO Identify messages coming in BUY SELL EXECUTE OR FAIL
+			String msgArr[] = message.split("\\|");
+			if (msgArr.length > 14){
+				switch (getFixValue(9, msgArr)){ //Could also use index 10 and adjust case values to 1 and 2 (Buy and Sell)
+					case "D":
+						//TODO buy;
+						break;
+					case "S":
+						//TODO sell
+						break;
+					//TODO Cases that are sent back to broker - success or fail
+				}
+			}
 			messages.add(message);
 
 		} catch (ExecutionException | InterruptedException e){
@@ -75,7 +89,6 @@ public class BaseClient {
 
 	public void sendServerMessage(String message){
 		try {
-			System.out.println(message);
 			ByteBuffer buffer = ByteBuffer.wrap(message.getBytes());
 			Future<Integer> writeval = client.write(buffer);				//writes to server
 			logger.logMessage(2 ,"Writing to server: "+message);
@@ -91,7 +104,13 @@ public class BaseClient {
 			client.close();
 		} catch (IOException e) {
 			// NO OP
+		} finally {
+			System.exit(0);
 		}
+	}
+
+	public String getFixValue(int index, String[] arr){
+		return arr[index].substring(arr[index].lastIndexOf("=") + 1);
 	}
 
 	public AsynchronousSocketChannel getClient() {

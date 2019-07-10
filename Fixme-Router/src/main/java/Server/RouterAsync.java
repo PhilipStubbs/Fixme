@@ -86,7 +86,15 @@ public class RouterAsync extends Thread {
 	}
 
 	public List<SocketHandlerAsync> getClientList() {
-		return clientList;
+		/* checks for dead threads */
+		for(int i = 0; i < this.clientList.size(); i++){
+			if (!this.clientList.get(i).isAlive()){
+				System.out.println("test");
+				this.clientList.remove(i);
+			}
+		}
+
+		return this.clientList;
 	}
 
 	public void setClientList(List<SocketHandlerAsync> clientList) {
