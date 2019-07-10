@@ -51,8 +51,10 @@ public class Server {
                     String tmpMessage = brokerMessages.get(0);
                     routerBrokerAsync.sendMessage(tmpMessage, routerBrokerAsync.getClientList().get(0).getClientId());
                 }
-            } catch (Exception e) {
+            } catch (InterruptedException e) {
                 e.printStackTrace();
+            } catch (IndexOutOfBoundsException ibe){
+                ibe.printStackTrace();
             }
         }
     }

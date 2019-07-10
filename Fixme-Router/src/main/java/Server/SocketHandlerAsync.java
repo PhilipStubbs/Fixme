@@ -45,16 +45,22 @@ public class SocketHandlerAsync extends Thread{
 
 
 					String clientMessage =  new String(buffer.array()).trim();
-//					logger.logMessage(2, "Received from client: "	+clientMessage);
-
-					messages.add(clientMessage);
+					if (clientMessage.toLowerCase().contains("exit")){
+						break;
+					}
+					logger.logMessage(2, "Received from client: "	+clientMessage);
+					if (this.isAlive) {
+						messages.add(clientMessage);
+					}
 					buffer.flip();
 					buffer.clear();
 				}
 			}
 
-		} catch (Exception e){
-			logger.logMessage(3, getClass().getSimpleName()+"> Error: " + e.getLocalizedMessage());
+		} catch (InterruptedException ie){
+			logger.logMessage(3, getClass().getSimpleName()+"> InterruptedException Error: " + ie.getLocalizedMessage());
+		} catch (ExecutionException ee) {
+			logger.logMessage(3, getClass().getSimpleName()+"> ExecutionException Error: " + ee.getLocalizedMessage());
 		} finally {
 			terminateConnection();
 		}
@@ -62,11 +68,16 @@ public class SocketHandlerAsync extends Thread{
 
 	public void sendMessage(String message){
 		try {
+			if (this.isAlive) {
 				ByteBuffer messageByteBuffer = ByteBuffer.allocate(message.length());
 				messageByteBuffer.wrap(message.getBytes());
 
 				Future<Integer> writeVal = socket.write(messageByteBuffer.wrap(message.getBytes()));        // writes to client
 				writeVal.get();
+			} else {
+				logger.logMessage(3, getClass().getSimpleName()+"> Connection is closed -> isAlive:"+isAlive);
+
+			}
 		}
 		 catch (InterruptedException | ExecutionException e){
 			 logger.logMessage(3, getClass().getSimpleName()+"> Server Exception "+ e.getLocalizedMessage());
@@ -76,7 +87,7 @@ public class SocketHandlerAsync extends Thread{
 
 	public void terminateConnection() {
 		try {
-			logger.logMessage(INFO,"Connection Terminated");
+			logger.logMessage(INFO,getClass().getSimpleName()+"> Connection Terminated for: "+this.id);
 			socket.close();
 		} catch (IOException e) {
 			// NO OP
