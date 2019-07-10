@@ -64,6 +64,31 @@ public class BrokerClient extends BaseClient {
 					TimeUnit.SECONDS.sleep(1);
 
 					getServerMessage();
+
+					if (!messages.isEmpty()) {
+						String msgArr[] = messages.get(0).split("\\|");
+						messages.remove(0);
+						if (msgArr.length > 14) {
+							int price = Integer.parseInt(getFixValue(13, msgArr));
+							int quantity = Integer.parseInt(getFixValue(11, msgArr));
+							String msgType = getFixValue(8, msgArr);
+							switch (getFixValue(14, msgArr)) {
+								case "1": //Accepted
+									if (msgType.equals("D")) {
+									}
+									//TODO Add to inventory;
+									else if (msgType.equals("S")) {
+									}
+									//TODO Remove from Inventory
+									break;
+								case "2": //Refused
+									break;
+								default:
+									//TODO no response
+									break;
+							}
+						}
+					}
 				}
 			} catch(IllegalStateException | NoSuchElementException e) {
 				// System.in has been closed
@@ -108,18 +133,35 @@ public class BrokerClient extends BaseClient {
 			//TODO Check if market is in list else get another input
 		}
 
-		logger.logMessage(1, "How many:");
+		logger.logMessage(1,"How many:");
 		while (scanner.hasNext()) {
 			quantity = scanner.nextLine();
-			break;
-			//TODO Check if quantity is a proper value between 0 - 1000000
+			try
+			{
+				int val = Integer.parseInt(quantity);
+				if (val > 0 && val < 100000)
+					break;
+			}
+			catch (NumberFormatException nfe)
+			{
+				logger.logMessage(1, "Please enter an integer value between 0 and 100000");
+			}
 		}
 
-		logger.logMessage(1,"At what price:");
+		logger.logMessage(1, "At what price:");
 		while (scanner.hasNext()) {
 			price = scanner.nextLine();
-			break;
-			//TODO Check if price is a proper value between 0 - 999999.99
+			try
+			{
+				float val = Float.parseFloat(price);
+				if (val > 0 && val < 99999.99)
+					break;
+			}
+			catch (NumberFormatException nfe)
+			{
+				logger.logMessage(1, "Please enter a float value between 0.00 and 99999.99");
+			}
+
 		}
 
 		Instant instant = Instant.now();
@@ -129,7 +171,6 @@ public class BrokerClient extends BaseClient {
 		fix = "8=FIX.4|9="+fix.getBytes().length+"|"+fix+"10="+checksum(ByteBuffer.wrap(fix.getBytes()), fix.length()) + "|\n";
 		logger.logMessage(2, fix);
 		sendServerMessage(fix);
-			//TODO Send FIX message to server
 	}
 
 	private void sell() {
@@ -158,15 +199,32 @@ public class BrokerClient extends BaseClient {
 		logger.logMessage(1,"How many:");
 		while (scanner.hasNext()) {
 			quantity = scanner.nextLine();
-			break;
-			//TODO Check if quantity is a proper value between 0 - 1000000
+			try
+			{
+				int val = Integer.parseInt(quantity);
+				if (val > 0 && val < 100000)
+					break;
+			}
+			catch (NumberFormatException nfe)
+			{
+				logger.logMessage(1, "Please enter an integer value between 0 and 100000");
+			}
 		}
 
 		logger.logMessage(1, "At what price:");
 		while (scanner.hasNext()) {
 			price = scanner.nextLine();
-			break;
-			//TODO Check if price is a proper value between 0 - 999999.99
+			try
+			{
+				float val = Float.parseFloat(price);
+				if (val > 0 && val < 99999.99)
+					break;
+			}
+			catch (NumberFormatException nfe)
+			{
+				logger.logMessage(1, "Please enter a float value between 0.00 and 99999.99");
+			}
+
 		}
 
 		Instant instant = Instant.now();
@@ -175,7 +233,6 @@ public class BrokerClient extends BaseClient {
 		fix = "8=FIX.4|9="+fix.getBytes().length+"|"+fix+"10="+checksum(ByteBuffer.wrap(fix.getBytes()), fix.length()) + "|";
 		logger.logMessage(2, fix);
 		sendServerMessage(fix);
-		//TODO Send FIX message to server
 	}
 
 	public AsynchronousSocketChannel getClient() {

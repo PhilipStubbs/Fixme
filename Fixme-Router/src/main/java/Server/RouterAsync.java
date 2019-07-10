@@ -20,7 +20,7 @@ import static Responsibilty.Logger.getChainOfLoggers;
 public class RouterAsync extends Thread {
 	private int port;
 	private List<SocketHandlerAsync> clientList;
-	private List<String> messages = new ArrayList<String>();
+	private ArrayList<String> messages = new ArrayList<String>();
 	private AbstractLogger logger = getChainOfLoggers();
 
 
@@ -70,7 +70,7 @@ public class RouterAsync extends Thread {
 				}
 			}
 			if (socketHandlerAsync != null) {
-				String message = str + " " + id;												// message
+				String message = str;												// message
 				socketHandlerAsync.sendMessage(message);
 				logger.logMessage(DEBUG,"Writing back to client: " + message);
 			} else {
@@ -100,7 +100,7 @@ public class RouterAsync extends Thread {
 		this.clientList = clientList;
 	}
 
-	public List<String> getMessages() {
+	public ArrayList<String> getMessages() {
 		return messages;
 	}
 }
