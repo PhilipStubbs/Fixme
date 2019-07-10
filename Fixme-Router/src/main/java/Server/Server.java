@@ -22,6 +22,16 @@ public class Server {
     static private ArrayList<ArrayList<SocketHandlerAsync>> routingTable;
 
     public static void main(String[] args) {
+        List<String> test = new ArrayList<>();
+
+        test.add("t");
+        test.add("e");
+        test.add("4");
+        test.remove(0);
+        test.remove(0);
+        System.out.println(test);
+        System.out.println(test.size());
+
 
         RouterAsync routerBrokerAsync = new RouterAsync(brokerPort);
         RouterAsync routerMarketAsync = new RouterAsync(marketPort);
@@ -35,12 +45,10 @@ public class Server {
                 brokerClientList = routerBrokerAsync.getClientList();
                 marketMessages = routerMarketAsync.getMessages();
                 brokerMessages = routerBrokerAsync.getMessages();
-                routingTable = RoutingTable.getRoutingTable();
-
-
+                routingTable = RoutingTable.getMarketRoutingTable();
 
                 // TODO -- message parsing is required. And extracting UUID from it.
-                outputRoutingTable();
+//                outputRoutingTable();
                 TimeUnit.SECONDS.sleep(1);
                 if (marketMessages.size() > 0 && marketClientList.size() > 0) {
                     logger.logMessage(2, "Market Server Port:5001 msg:"+marketMessages.size() +" client:"+marketClientList.size());
@@ -59,6 +67,7 @@ public class Server {
                     }
                     routerBrokerAsync.sendMessage(tmpMessage, routerBrokerAsync.getClientList().get(0).getClientId());
                 }
+
             } catch (InterruptedException e) {
                 e.printStackTrace();
             } catch (IndexOutOfBoundsException ibe){

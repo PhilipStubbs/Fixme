@@ -2,6 +2,8 @@ package Client;
 
 import BaseClient.BaseClient;
 import Server.RoutingTable.RoutingTable;
+import Server.SocketHandlerAsync;
+import javafx.concurrent.Task;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
@@ -10,16 +12,17 @@ import java.nio.channels.AsynchronousSocketChannel;
 import java.time.Instant;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.NoSuchElementException;
 import java.util.Scanner;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 
 public class BrokerClient extends BaseClient {
 	Scanner scanner;
 	private int numOrders;
 	private int numQuotes;
+	private ArrayList<ArrayList<String>> marketListing = new ArrayList<ArrayList<String>>();
 
 	public BrokerClient(int port){
 		this.port = port;
@@ -38,14 +41,14 @@ public class BrokerClient extends BaseClient {
 
 			messages.clear();
 			logger.logMessage(1,"ID Assigned :"+id);
+			getServerMessage();
+
 
 			scanner = new Scanner(System.in);
 			try {
 				while (true) {
-					logger.logMessage(1,"---------Please input a command---------");
-					logger.logMessage(1,"BUY  - buy an instrument from the markets");
-					logger.logMessage(1,"SELL - sell an instrument to the markets");
-					logger.logMessage(1,"EXIT - close connection to the server");
+//					routingTable = RoutingTable.getRoutingTable();
+					brokerInstructions();
 
 					String line = scanner.nextLine();
 					if (line.equalsIgnoreCase("exit")){
@@ -59,22 +62,44 @@ public class BrokerClient extends BaseClient {
 					else if (line.equalsIgnoreCase("sell")){
 						this.sell();
 					}
+//					else if (line.equalsIgnoreCase("update")) {
+//						try {
+//							int time = 0;
+//							UpdateMarketListing updateMarketListing = new UpdateMarketListing(this);
+//							updateMarketListing.start();
+//
+//							while (time < 5) {
+//								if (messages.size() > 0)
+//								TimeUnit.SECONDS.sleep(1);
+//								time++;
+//								logger.logMessage(1, time + " Checking for " + time + "/5 seconds");
+//							}
+//							if (messages.size() > 0) {
+//								System.out.println(messages.get(0));
+//							}
+//								updateMarketListing.interrupt();
+//
+//						} catch (InterruptedException e) {
+//
+//						}
+//					}
+
 					logger.logMessage(2, "User input was: "+ line);
 //					sendServerMessage(line);
 					TimeUnit.SECONDS.sleep(1);
 
-					getServerMessage();
+//					getServerMessage();
 				}
 			} catch(IllegalStateException | NoSuchElementException e) {
 				// System.in has been closed
-				logger.logMessage(3,"System.in was closed; exiting");
+				logger.logMessage(3, getClass().getSimpleName() + "> System.in was closed; exiting");
 			}
 		}
 		catch (ExecutionException | IOException e) {
 			e.printStackTrace();
 		}
 		catch (InterruptedException e) {
-			logger.logMessage(3 ,"Disconnected from the server.");
+			logger.logMessage(3 ,getClass().getSimpleName() + "> Disconnected from the server.");
 		} finally {
 			try {
 				client.close();
@@ -82,6 +107,34 @@ public class BrokerClient extends BaseClient {
 				// NO OP
 			}
 		}
+	}
+
+//	public void updateMarketListing() {
+//		try {
+//			UpdateMarketListing updateMarketListing = new UpdateMarketListing();
+//
+//
+//		} catch (InterruptedException e) {
+//			logger.logMessage(3,getClass().getSimpleName() + "> Error" + e.getLocalizedMessage());
+//		}
+//
+//	}
+
+	private void processMarketListUpdate(String serilized){
+		int tmpIndex;
+		String tmpId = "";
+
+		// TODO finish this.
+
+		updateMarketRoutingTable(tmpIndex, tmpId);
+	}
+
+	private void brokerInstructions(){
+		logger.logMessage(1,"---------Please input a command---------");
+		logger.logMessage(1,"BUY  - buy an instrument from the markets");
+		logger.logMessage(1,"SELL - sell an instrument to the markets");
+		logger.logMessage(1,"UPDATE - update your market listing");
+		logger.logMessage(1,"EXIT - close connection to the server");
 	}
 
 	private void buy() {
@@ -92,7 +145,7 @@ public class BrokerClient extends BaseClient {
 		String price = "";
 
 		logger.logMessage(1,"-------Please fill in the following details--------");
-		logger.logMessage(1, RoutingTable.getRoutingTable().toString());
+//		logger.logMessage(1, RoutingTable.getRoutingTable().toString());
 
 		logger.logMessage(1,"Enter Instrument You Wish to buy:");
 		while (scanner.hasNext()) {
@@ -139,7 +192,7 @@ public class BrokerClient extends BaseClient {
 		String price = "";
 
 		logger.logMessage(1,"-------Please fill in the following details--------");
-		logger.logMessage(1, RoutingTable.getRoutingTable().toString());
+//		logger.logMessage(1, RoutingTable.getRoutingTable().toString());
 
 		logger.logMessage(1, "Enter Instrument You Wish to sell:");
 		while (scanner.hasNext()) {
@@ -188,5 +241,16 @@ public class BrokerClient extends BaseClient {
 			checksum += b.get(i);
 		}
 		return checksum % 256;
+	}
+
+
+	public void updateMarketRoutingTable(int index ,String newMarket){
+		try {
+			marketListing.get(index).add(newMarket);
+		} catch (IndexOutOfBoundsException e){
+			// If an error is thrown. We create the new list.
+			marketListing.add(new ArrayList<String>());
+			marketListing.get(index).add(newMarket);
+		}
 	}
 }

@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
 import java.nio.channels.AsynchronousSocketChannel;
+import java.nio.channels.CompletionHandler;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -69,6 +70,8 @@ public class BaseClient {
 			logger.logMessage(2 ,"Received from server: " + message);
 			//TODO Identify messages coming in BUY SELL EXECUTE OR FAIL
 			String msgArr[] = message.split("\\|");
+
+			/*	gets fix message out */
 			if (msgArr.length > 14){
 				switch (getFixValue(9, msgArr)){ //Could also use index 10 and adjust case values to 1 and 2 (Buy and Sell)
 					case "D":
@@ -85,6 +88,51 @@ public class BaseClient {
 		} catch (ExecutionException | InterruptedException e){
 			e.printStackTrace();
 		}
+	}
+
+	public void getServerMessage(Long timeout) {
+
+
+
+//			(ByteBuffer dst, long timeout, TimeUnit unit, A attachment, CompletionHandler<Integer,​? super A> handler)
+
+
+			logger.logMessage(2 ,"Is client open " + client.isOpen());
+			ByteBuffer buffer = ByteBuffer.allocate(1024);				// TODO -- find better way to allocate buffersize
+
+			client.read(buffer, null,
+					new CompletionHandler<Integer , Object>() {
+						@Override
+						public void completed(Integer result, Object attachment) {
+
+//							if (result < 0) {
+//								// handle unexpected connection close
+//							}
+//							else if (buffer.remaining() > 0) {
+//								// repeat the call with the same CompletionHandler
+//								client.read(buffer, null, this);
+//							}
+//							else {
+								String clientMessage =  new String(buffer.array()).trim();
+								System.out.println("Received from client: "	+clientMessage);
+								messages.add(clientMessage);
+//								// got all data, process the buffer
+//							}
+						}
+						@Override
+						public void failed(Throwable e, Object attachment) {
+							// handle the failure
+						}
+					});
+
+
+
+			String message = new String(buffer.array()).trim();
+			logger.logMessage(2 ,"Received from server: " + message);
+
+			messages.add(message);
+
+
 	}
 
 	public void sendServerMessage(String message){
