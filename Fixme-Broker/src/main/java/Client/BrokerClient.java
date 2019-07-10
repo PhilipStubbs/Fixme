@@ -42,7 +42,11 @@ public class BrokerClient extends BaseClient {
 			scanner = new Scanner(System.in);
 			try {
 				while (true) {
-					System.out.println("Please input a line");
+					System.out.println("---------Please input a command---------");
+					System.out.println("BUY  - buy an instrument from the markets");
+					System.out.println("SELL - sell an instrument to the markets");
+					System.out.println("EXIT - close connection to the server");
+
 					String line = scanner.nextLine();
 					if (line.equalsIgnoreCase("exit")){
 						this.terminateConnection();
@@ -54,8 +58,8 @@ public class BrokerClient extends BaseClient {
 					else if (line.equalsIgnoreCase("sell")){
 						this.sell();
 					}
-					System.out.printf("User input was: %s%n", line);
-					sendServerMessage(line);
+//					System.out.printf("User input was: %s%n", line);
+//					sendServerMessage(line);
 					TimeUnit.SECONDS.sleep(1);
 
 					getServerMessage();
@@ -120,9 +124,10 @@ public class BrokerClient extends BaseClient {
 		Instant instant = Instant.now();
 		ZonedDateTime now = ZonedDateTime.now(ZoneOffset.UTC);
 
-		String fix = String.format("35=D|49=%s|56=%s|52=%s|11=%d|21=1|55=D|54=1|60=%s|38=%s|40=1|44=%s|",id, market, now, ++this.numOrders,instrument, quantity, price);
-		fix = "8=FIX.4|9="+fix.getBytes().length+"|"+fix+"10="+checksum(ByteBuffer.wrap(fix.getBytes()), fix.length()) + "|";
-		System.out.println(fix);
+		String fix = String.format("35=D|49=%s|56=%s|52=%s|11=%d|21=1|55=D|54=1|60=%s|38=%s|40=1|44=%s|39=0|",id, market, now, ++this.numOrders,instrument, quantity, price);
+		fix = "8=FIX.4|9="+fix.getBytes().length+"|"+fix+"10="+checksum(ByteBuffer.wrap(fix.getBytes()), fix.length()) + "|\n";
+		logger.logMessage(2, fix);
+		sendServerMessage(fix);
 			//TODO Send FIX message to server
 	}
 
@@ -165,9 +170,10 @@ public class BrokerClient extends BaseClient {
 
 		Instant instant = Instant.now();
 		ZonedDateTime now = ZonedDateTime.now(ZoneOffset.UTC);
-		String fix = String.format("35=S|49=%s*|56=%s|52=%s|117=%s|55=S|54=2|60=%s|38=%s|40=1|44=%s|",id,market, now, ++this.numQuotes, instrument, quantity, price);
+		String fix = String.format("35=S|49=%s|56=%s|52=%s|117=%s|55=S|54=2|60=%s|38=%s|40=1|44=%s|39=0|",id,market, now, ++this.numQuotes, instrument, quantity, price);
 		fix = "8=FIX.4|9="+fix.getBytes().length+"|"+fix+"10="+checksum(ByteBuffer.wrap(fix.getBytes()), fix.length()) + "|";
-		System.out.println(fix);
+		logger.logMessage(2, fix);
+		sendServerMessage(fix);
 		//TODO Send FIX message to server
 	}
 

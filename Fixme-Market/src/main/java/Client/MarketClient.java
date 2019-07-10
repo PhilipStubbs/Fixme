@@ -38,8 +38,8 @@ public class MarketClient extends BaseClient {
 
 				while (true) {
 //					sendServerMessage("test");
-//					TimeUnit.SECONDS.sleep(1);
-//					getServerMessage();
+					TimeUnit.SECONDS.sleep(1);
+					getServerMessage();
 				}
 
 			}
