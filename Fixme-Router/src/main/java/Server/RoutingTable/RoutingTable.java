@@ -42,6 +42,14 @@ public class RoutingTable {
         return serializedString;
     }
 
+    public static void removeMarket(SocketHandlerAsync deadMarket){
+        marketRoutingTable.remove(deadMarket.getIndex()).remove(deadMarket);
+    }
+
+    public static void removeBroker(SocketHandlerAsync deadBroker){
+        brokerRoutingTable.remove(deadBroker);
+    }
+
     public static ArrayList<SocketHandlerAsync> getBrokerRoutingTable() {
         return brokerRoutingTable;
     }
