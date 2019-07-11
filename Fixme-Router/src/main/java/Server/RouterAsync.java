@@ -11,6 +11,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 
 import static Responsibilty.AbstractLogger.DEBUG;
 import static Responsibilty.AbstractLogger.ERROR;
@@ -43,10 +44,15 @@ public class RouterAsync extends Thread {
 				SocketHandlerAsync socketHandlerAsync = new SocketHandlerAsync(client, clientList.size() ,messages);
 				logger.logMessage(INFO,"Added Client: " + socketHandlerAsync.getClientId());
 				clientList.add(socketHandlerAsync);
-				if (port == 5001)
-					RoutingTable.updateRoutingTable(socketHandlerAsync);
-
 				socketHandlerAsync.start();
+				if (port == 5001) {
+					RoutingTable.updateMarketRoutingTable(socketHandlerAsync);
+				} else if (port == 5000){
+					RoutingTable.updateBrokerRoutingTable(socketHandlerAsync);
+					TimeUnit.SECONDS.sleep(1);							// TODO -- Look into not using a sleep.
+					socketHandlerAsync.sendMessage(RoutingTable.serializedMarketString());
+				}
+
 			}
 
 		}  catch (InterruptedException | ExecutionException | IOException e){
@@ -57,6 +63,15 @@ public class RouterAsync extends Thread {
 	@Override
 	public void run() {
 		startServer();
+	}
+
+	public void informBrokers() {
+		ArrayList<SocketHandlerAsync> brokerRoutingTable = RoutingTable.getBrokerRoutingTable();
+		String serialized = RoutingTable.serializedMarketString();
+
+		for (int i = 0; i < brokerRoutingTable.size(); i++){
+			brokerRoutingTable.get(i).sendMessage(serialized);
+		}
 	}
 
 	public void sendMessage(String str, String id) {
