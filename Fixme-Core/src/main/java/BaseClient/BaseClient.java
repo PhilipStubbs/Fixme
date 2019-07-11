@@ -65,7 +65,10 @@ public class BaseClient {
 			logger.logMessage(2 ,"Is client open " + client.isOpen());
 			ByteBuffer buffer = ByteBuffer.allocate(1024);				// TODO -- find better way to allocate buffersize
 			Future<Integer> readval = client.read(buffer);                // fetches from server
-			readval.get();
+			if (readval.get() == -1){
+				this.terminateConnection();
+			}
+
 			String message = new String(buffer.array()).trim();
 			logger.logMessage(2 ,"Received from server: " + message);
 			//TODO Identify messages coming in BUY SELL EXECUTE OR FAIL

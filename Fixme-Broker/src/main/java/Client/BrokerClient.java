@@ -35,9 +35,9 @@ public class BrokerClient extends BaseClient {
 			String[] split = messages.get(0).split(" ");
 			int tmpInt = Integer.parseInt(split[1]);				// TODO client number -> maybe dont need for broker.
 			id = split[0];
+			logger.logMessage(1,"ID Assigned :"+id);
 
 			messages.clear();
-			logger.logMessage(1,"ID Assigned :"+id);
 			getServerMessage();
 			processMarketListUpdate(messages.get(0));
 			messages.clear();
@@ -64,6 +64,8 @@ public class BrokerClient extends BaseClient {
 						sendServerMessage("update");
 						getServerMessage();
 						processMarketListUpdate(messages.get(0));
+					} else if (line.equalsIgnoreCase("list")){
+						outputMarketListing();
 					}
 
 					logger.logMessage(2, "User input was: "+ line);
@@ -117,30 +119,51 @@ public class BrokerClient extends BaseClient {
 		"		BUY  - buy an instrument from the markets\n" +
 		"		SELL - sell an instrument to the markets\n" +
 		"		UPDATE - update your market listing\n" +
+		"		LIST - display market listings\n" +
 		"		EXIT - close connection to the server\n");
 	}
 
 	private void buy() {
 
 		String instrument ="";
-		String market = "";
+		int market = -0;
+		String rawMarket = "";
 		String quantity = "";
 		String price = "";
+		int marketIndex = -1;
 
 		logger.logMessage(1,"-------Please fill in the following details--------");
-		outputMarketListing();
+		outputAvailableInstruments();
 
 		logger.logMessage(1,"Enter Instrument You Wish to buy:");
 		while (scanner.hasNext()) {
 			instrument = scanner.nextLine();
-			break;
-			//TODO Check if instrument is in list else get another input
+			marketIndex = instrumentToIndex(instrument);
+			if (marketIndex > -1 && marketIndex < marketListing.size()) {
+				break;
+			} else {
+				logger.logMessage(3, "Invalid Instrument type: "+instrument);
+				outputAvailableInstruments();
+			}
 		}
 
 		logger.logMessage(1,"Which market would you like to buy from (Please choose their index):");
+		outputMarkets(marketIndex);
+
 		while (scanner.hasNext()) {
-			market = scanner.nextLine();
-			break;
+			rawMarket = scanner.nextLine();
+			try {
+				market = Integer.parseInt(rawMarket);
+				if ( market > -1 && market < marketListing.get(marketIndex).size() ) {
+					break;
+				} else {
+					logger.logMessage(3, "Invalid Market Index: "+rawMarket);
+				}
+			} catch (NumberFormatException e){
+				logger.logMessage(3, "Invalid Market Index: "+rawMarket);
+			}
+			outputMarkets(marketIndex);
+
 			//TODO Check if market is in list else get another input
 		}
 
@@ -185,6 +208,7 @@ public class BrokerClient extends BaseClient {
 		}
 
 		logger.logMessage(1,"Which market would you like to sell to (Please choose their index):");
+
 		while (scanner.hasNext()) {
 			market = scanner.nextLine();
 			break;
@@ -260,6 +284,68 @@ public class BrokerClient extends BaseClient {
 			for (int x = 0; x < marketListing.get(i).size(); x++){
 				logger.logMessage(1, "	Index:"+ i + "-" + x + " market id:" + marketListing.get(i).get(x));
 			}
+		}
+	}
+
+	public void outputAvailableInstruments() {
+		logger.logMessage(1, "Available Instruments are as followed.");
+		for (int i = 0; i < marketListing.size(); i++) {
+			switch (i) {
+				case GOLD:
+					logger.logMessage(1, "	Gold");
+					break;
+
+				case SILVER:
+					logger.logMessage(1, "	Silver");
+					break;
+
+				case BITCOIN:
+					logger.logMessage(1, "	Bitcoin");
+					break;
+
+				case RED_SUGAR:
+					logger.logMessage(1, "	Red Sugar");
+					break;
+
+				case MORKITE:
+					logger.logMessage(1, "	Morkite");
+					break;
+
+				case APOCA_BLOOM:
+					logger.logMessage(1, "	Apoca Bloom");
+					break;
+			}
+		}
+	}
+
+	public void outputMarkets(int marketIndex) {
+			for (int x = 0; x < marketListing.get(marketIndex).size(); x++){
+				logger.logMessage(1, "	Index:"+ x + " market id:" + marketListing.get(marketIndex).get(x));
+			}
+	}
+
+	public int instrumentToIndex(String input){
+		switch (input.toLowerCase()) {
+			case "gold":
+				return GOLD;
+
+			case "silver":
+				return SILVER;
+
+			case "bitcoin":
+				return BITCOIN;
+
+			case "red sugar":
+				return RED_SUGAR;
+
+			case "morkite":
+				return MORKITE;
+
+			case "apoca bloom":
+				return APOCA_BLOOM;
+
+			default:
+				return -1;
 		}
 	}
 }
