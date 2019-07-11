@@ -48,7 +48,7 @@ public class SocketHandlerAsync extends Thread{
 					if (clientMessage.toLowerCase().contains("exit")){
 						break;
 					}
-					logger.logMessage(2, "Received from client: "	+clientMessage);
+					logger.logMessage(2, "Received from client " +id +": "	+clientMessage);
 					if (this.isAlive) {
 						messages.add(clientMessage);
 					}
@@ -79,9 +79,9 @@ public class SocketHandlerAsync extends Thread{
 
 			}
 		}
-		 catch (InterruptedException | ExecutionException e){
-			 logger.logMessage(3, getClass().getSimpleName()+"> Server Exception "+ e.getLocalizedMessage());
-			 terminateConnection();
+		catch (InterruptedException | ExecutionException e){
+			logger.logMessage(3, getClass().getSimpleName()+"> Server Exception "+ e.getLocalizedMessage());
+			terminateConnection();
 		}
 	}
 

@@ -72,7 +72,7 @@ public class RouterAsync extends Thread {
 			if (socketHandlerAsync != null) {
 				String message = str;												// message
 				socketHandlerAsync.sendMessage(message);
-				logger.logMessage(DEBUG,"Writing back to client: " + message);
+				logger.logMessage(DEBUG,"Writing to client "+id+": " + message);
 			} else {
 				logger.logMessage(ERROR,getClass().getSimpleName() + "> failed to send message to :"+ id);
 			}

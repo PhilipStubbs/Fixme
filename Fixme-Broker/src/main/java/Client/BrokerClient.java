@@ -10,6 +10,8 @@ import java.nio.channels.AsynchronousSocketChannel;
 import java.time.Instant;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Scanner;
 import java.util.concurrent.ExecutionException;
@@ -18,6 +20,7 @@ import java.util.concurrent.TimeUnit;
 
 public class BrokerClient extends BaseClient {
 	Scanner scanner;
+	private List<Integer> inventory = new ArrayList<Integer>();
 	private int numOrders;
 	private int numQuotes;
 
@@ -71,10 +74,12 @@ public class BrokerClient extends BaseClient {
 						if (msgArr.length > 14) {
 							int price = Integer.parseInt(getFixValue(13, msgArr));
 							int quantity = Integer.parseInt(getFixValue(11, msgArr));
+							String instrumentType = getFixValue(10, msgArr);
 							String msgType = getFixValue(8, msgArr);
 							switch (getFixValue(14, msgArr)) {
 								case "1": //Accepted
 									if (msgType.equals("D")) {
+
 									}
 									//TODO Add to inventory;
 									else if (msgType.equals("S")) {

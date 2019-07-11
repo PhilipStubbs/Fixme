@@ -48,12 +48,18 @@ public class Server {
                     String strArray[] = tmpMessage. split("\\|");
 
                     if (strArray.length > 14) {
-                        String brokerId = strArray[4].substring(strArray[3].lastIndexOf("=") + 1);
-                        routerBrokerAsync.sendMessage(tmpMessage, brokerId);
+                        String msgTo = strArray[14].substring(strArray[14].lastIndexOf("=") + 1);
+                        if (msgTo.equals("0")){
+                            //TODO is FIX is not working
+                            String marketIndex = strArray[4].substring(strArray[4].lastIndexOf("=") + 1); //Get broker index
+                            routerBrokerAsync.sendMessage(tmpMessage, routerMarketAsync.getClientList().get(Integer.parseInt(marketIndex)).getClientId());
+                        }
+                        else{
+                            String brokerId = strArray[3].substring(strArray[3].lastIndexOf("=") + 1); //Get broker index
+                            routerBrokerAsync.sendMessage(tmpMessage, brokerId);
+                        }
                     }
-                    else{
-                        //routerMarketAsync.sendMessage(tmpMessage, routerMarketAsync.getClientList().get(0).getClientId());
-                    }
+                    marketMessages.remove(0);
                 }
 
                 if (brokerMessages.size() > 0 && brokerClientList.size() > 0) {
@@ -62,12 +68,13 @@ public class Server {
                     String strArray[] = tmpMessage. split("\\|");
 
                     if (strArray.length > 14){
-                        int marketIndex = Integer.parseInt(strArray[4].substring(strArray[4].lastIndexOf("=") + 1));
-                        routerMarketAsync.sendMessage(tmpMessage, routerMarketAsync.getClientList().get(marketIndex).getClientId());
+                        String msgTo = strArray[14].substring(strArray[14].lastIndexOf("=") + 1);
+                        if (msgTo.equals("0")) {
+                            int marketIndex = Integer.parseInt(strArray[4].substring(strArray[4].lastIndexOf("=") + 1));
+                            routerMarketAsync.sendMessage(tmpMessage, routerMarketAsync.getClientList().get(marketIndex).getClientId());
+                        }
                     }
-                    else{
-                        routerBrokerAsync.sendMessage(tmpMessage, routerBrokerAsync.getClientList().get(0).getClientId());
-                    }
+                    brokerMessages.remove(0);
                 }
             } catch (InterruptedException e) {
                 e.printStackTrace();
@@ -82,7 +89,7 @@ public class Server {
         for (int i = 0 ; i < routingTable.size(); i++){
             tmp += Instruments.instruments[i]+ " -> ";
             for (int x = 0; x < routingTable.get(i).size(); x++){
-               tmp += routingTable.get(i).get(x).getClientId() +" ";
+                tmp += routingTable.get(i).get(x).getClientId() +" ";
             }
             logger.logMessage(2, tmp);
             tmp = "";
