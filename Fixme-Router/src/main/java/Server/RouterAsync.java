@@ -84,6 +84,7 @@ public class RouterAsync extends Thread {
 					socketHandlerAsync = clientList.get(i);
 				}
 			}
+
 			if (socketHandlerAsync != null) {
 				String message = str;												// message
 				socketHandlerAsync.sendMessage(message);
@@ -103,11 +104,12 @@ public class RouterAsync extends Thread {
 	public List<SocketHandlerAsync> getClientList() {
 		/* checks for dead threads */
 		for(int i = 0; i < this.clientList.size(); i++){
-			if (!this.clientList.get(i).isAlive()){
+			if (!this.clientList.get(i).isClientAlive() || !this.clientList.get(i).getSocket().isOpen()){
+				logger.logMessage(1, getClass().getSimpleName()+"> Removing client:" + this.clientList.get(i).getClientId());
+				RoutingTable.removeMarket(this.clientList.get(i));
 				this.clientList.remove(i);
 			}
 		}
-
 		return this.clientList;
 	}
 
