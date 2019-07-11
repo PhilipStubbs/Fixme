@@ -90,51 +90,6 @@ public class BaseClient {
 		}
 	}
 
-	public void getServerMessage(Long timeout) {
-
-
-
-//			(ByteBuffer dst, long timeout, TimeUnit unit, A attachment, CompletionHandler<Integer,​? super A> handler)
-
-
-			logger.logMessage(2 ,"Is client open " + client.isOpen());
-			ByteBuffer buffer = ByteBuffer.allocate(1024);				// TODO -- find better way to allocate buffersize
-
-			client.read(buffer, null,
-					new CompletionHandler<Integer , Object>() {
-						@Override
-						public void completed(Integer result, Object attachment) {
-
-//							if (result < 0) {
-//								// handle unexpected connection close
-//							}
-//							else if (buffer.remaining() > 0) {
-//								// repeat the call with the same CompletionHandler
-//								client.read(buffer, null, this);
-//							}
-//							else {
-								String clientMessage =  new String(buffer.array()).trim();
-								System.out.println("Received from client: "	+clientMessage);
-								messages.add(clientMessage);
-//								// got all data, process the buffer
-//							}
-						}
-						@Override
-						public void failed(Throwable e, Object attachment) {
-							// handle the failure
-						}
-					});
-
-
-
-			String message = new String(buffer.array()).trim();
-			logger.logMessage(2 ,"Received from server: " + message);
-
-			messages.add(message);
-
-
-	}
-
 	public void sendServerMessage(String message){
 		try {
 			ByteBuffer buffer = ByteBuffer.wrap(message.getBytes());

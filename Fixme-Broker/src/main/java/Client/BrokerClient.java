@@ -1,10 +1,6 @@
 package Client;
 
 import BaseClient.BaseClient;
-import Server.RoutingTable.RoutingTable;
-import Server.SocketHandlerAsync;
-import javafx.concurrent.Task;
-
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
@@ -13,16 +9,17 @@ import java.time.Instant;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.NoSuchElementException;
 import java.util.Scanner;
 import java.util.concurrent.*;
+
+import static Instruments.Instruments.*;
 
 public class BrokerClient extends BaseClient {
 	Scanner scanner;
 	private int numOrders;
 	private int numQuotes;
-	private ArrayList<ArrayList<String>> marketListing = new ArrayList<ArrayList<String>>();
+	private ArrayList<ArrayList<String>> marketListing;
 
 	public BrokerClient(int port){
 		this.port = port;
@@ -42,11 +39,12 @@ public class BrokerClient extends BaseClient {
 			messages.clear();
 			logger.logMessage(1,"ID Assigned :"+id);
 			getServerMessage();
-
-
+			processMarketListUpdate(messages.get(0));
+			messages.clear();
 			scanner = new Scanner(System.in);
 			try {
 				while (true) {
+
 //					routingTable = RoutingTable.getRoutingTable();
 					brokerInstructions();
 
@@ -62,33 +60,15 @@ public class BrokerClient extends BaseClient {
 					else if (line.equalsIgnoreCase("sell")){
 						this.sell();
 					}
-//					else if (line.equalsIgnoreCase("update")) {
-//						try {
-//							int time = 0;
-//							UpdateMarketListing updateMarketListing = new UpdateMarketListing(this);
-//							updateMarketListing.start();
-//
-//							while (time < 5) {
-//								if (messages.size() > 0)
-//								TimeUnit.SECONDS.sleep(1);
-//								time++;
-//								logger.logMessage(1, time + " Checking for " + time + "/5 seconds");
-//							}
-//							if (messages.size() > 0) {
-//								System.out.println(messages.get(0));
-//							}
-//								updateMarketListing.interrupt();
-//
-//						} catch (InterruptedException e) {
-//
-//						}
-//					}
+					else if (line.equalsIgnoreCase("update")) {
+						sendServerMessage("update");
+						getServerMessage();
+						processMarketListUpdate(messages.get(0));
+					}
 
 					logger.logMessage(2, "User input was: "+ line);
-//					sendServerMessage(line);
 					TimeUnit.SECONDS.sleep(1);
 
-//					getServerMessage();
 				}
 			} catch(IllegalStateException | NoSuchElementException e) {
 				// System.in has been closed
@@ -109,32 +89,35 @@ public class BrokerClient extends BaseClient {
 		}
 	}
 
-//	public void updateMarketListing() {
-//		try {
-//			UpdateMarketListing updateMarketListing = new UpdateMarketListing();
-//
-//
-//		} catch (InterruptedException e) {
-//			logger.logMessage(3,getClass().getSimpleName() + "> Error" + e.getLocalizedMessage());
-//		}
-//
-//	}
 
-	private void processMarketListUpdate(String serilized){
-		int tmpIndex;
-		String tmpId = "";
+	private void processMarketListUpdate(String serialized){
+		ArrayList<ArrayList<String>> updatedMarketListing = new ArrayList<ArrayList<String>>();
+		int tmpIndex = serialized.indexOf("|") + 1;
 
-		// TODO finish this.
+		String[] marketListing = serialized.substring(tmpIndex).split("\n");
+		String[] markets;
 
-		updateMarketRoutingTable(tmpIndex, tmpId);
+		for (int i = 0; i < marketListing.length; i++){
+			markets = marketListing[i].split("_");
+			for (int x = 1; x < markets.length; ++x){
+				try {
+					updatedMarketListing.get(i).add(markets[x]);
+				} catch (IndexOutOfBoundsException e){
+					// If an error is thrown. We create the new list.
+					updatedMarketListing.add(new ArrayList<String>());
+					updatedMarketListing.get(i).add(markets[x]);
+				}
+			}
+		}
+		this.marketListing = updatedMarketListing;
 	}
 
 	private void brokerInstructions(){
-		logger.logMessage(1,"---------Please input a command---------");
-		logger.logMessage(1,"BUY  - buy an instrument from the markets");
-		logger.logMessage(1,"SELL - sell an instrument to the markets");
-		logger.logMessage(1,"UPDATE - update your market listing");
-		logger.logMessage(1,"EXIT - close connection to the server");
+		logger.logMessage(1,"---------Please input a command---------\n" +
+		"		BUY  - buy an instrument from the markets\n" +
+		"		SELL - sell an instrument to the markets\n" +
+		"		UPDATE - update your market listing\n" +
+		"		EXIT - close connection to the server\n");
 	}
 
 	private void buy() {
@@ -145,7 +128,7 @@ public class BrokerClient extends BaseClient {
 		String price = "";
 
 		logger.logMessage(1,"-------Please fill in the following details--------");
-//		logger.logMessage(1, RoutingTable.getRoutingTable().toString());
+		outputMarketListing();
 
 		logger.logMessage(1,"Enter Instrument You Wish to buy:");
 		while (scanner.hasNext()) {
@@ -244,13 +227,39 @@ public class BrokerClient extends BaseClient {
 	}
 
 
-	public void updateMarketRoutingTable(int index ,String newMarket){
-		try {
-			marketListing.get(index).add(newMarket);
-		} catch (IndexOutOfBoundsException e){
-			// If an error is thrown. We create the new list.
-			marketListing.add(new ArrayList<String>());
-			marketListing.get(index).add(newMarket);
+	public void outputMarketListing() {
+		System.out.println("inside printing");
+		for (int i = 0; i < marketListing.size(); i++) {
+			switch (i) {
+				case GOLD:
+					logger.logMessage(1, "Gold:");
+					break;
+
+				case SILVER:
+					logger.logMessage(1, "Silver:");
+					break;
+
+				case BITCOIN:
+					logger.logMessage(1, "Bitcoin:");
+					break;
+
+				case RED_SUGAR:
+					logger.logMessage(1, "Red Sugar:");
+					break;
+
+				case MORKITE:
+					logger.logMessage(1, "Morkite:");
+					break;
+
+				case APOCA_BLOOM:
+					logger.logMessage(1, "Apoca Bloom:");
+					break;
+
+			}
+
+			for (int x = 0; x < marketListing.get(i).size(); x++){
+				logger.logMessage(1, "	Index:"+ i + "-" + x + " market id:" + marketListing.get(i).get(x));
+			}
 		}
 	}
 }

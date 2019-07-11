@@ -47,8 +47,6 @@ public class RouterAsync extends Thread {
 				socketHandlerAsync.start();
 				if (port == 5001) {
 					RoutingTable.updateMarketRoutingTable(socketHandlerAsync);
-					TimeUnit.SECONDS.sleep(1);							// TODO -- Look into not using a sleep.
-					informBrokers();
 				} else if (port == 5000){
 					RoutingTable.updateBrokerRoutingTable(socketHandlerAsync);
 					TimeUnit.SECONDS.sleep(1);							// TODO -- Look into not using a sleep.

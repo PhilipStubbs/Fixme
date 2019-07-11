@@ -22,17 +22,6 @@ public class Server {
     static private ArrayList<ArrayList<SocketHandlerAsync>> routingTable;
 
     public static void main(String[] args) {
-        List<String> test = new ArrayList<>();
-
-        test.add("t");
-        test.add("e");
-        test.add("4");
-        test.remove(0);
-        test.remove(0);
-        System.out.println(test);
-        System.out.println(test.size());
-
-
         RouterAsync routerBrokerAsync = new RouterAsync(brokerPort);
         RouterAsync routerMarketAsync = new RouterAsync(marketPort);
         routerBrokerAsync.start();

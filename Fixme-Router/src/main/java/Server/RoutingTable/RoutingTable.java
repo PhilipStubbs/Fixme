@@ -32,7 +32,10 @@ public class RoutingTable {
         for (int i = 0 ; i < marketRoutingTable.size(); i++){
             serializedString += i+ "_";
             for (int x = 0; x < marketRoutingTable.get(i).size(); x++){
-                serializedString += marketRoutingTable.get(i).get(x).getClientId() +" ";
+                serializedString += marketRoutingTable.get(i).get(x).getClientId();
+                if (x < marketRoutingTable.get(i).size() -1){
+                    serializedString += "_";
+                }
             }
             serializedString += "\n";
         }
