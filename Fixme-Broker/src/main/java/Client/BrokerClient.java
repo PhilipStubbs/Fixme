@@ -44,8 +44,6 @@ public class BrokerClient extends BaseClient {
 			scanner = new Scanner(System.in);
 			try {
 				while (true) {
-
-//					routingTable = RoutingTable.getRoutingTable();
 					brokerInstructions();
 
 					String line = scanner.nextLine();
@@ -56,9 +54,11 @@ public class BrokerClient extends BaseClient {
 					}
 					else if (line.equalsIgnoreCase("buy")){
 						this.buy();
+						getServerMessage();
 					}
 					else if (line.equalsIgnoreCase("sell")){
 						this.sell();
+						getServerMessage();
 					}
 					else if (line.equalsIgnoreCase("update")) {
 						sendServerMessage("update");
@@ -126,7 +126,7 @@ public class BrokerClient extends BaseClient {
 	private void buy() {
 
 		String instrument ="";
-		int market = -0;
+		int market = -1;
 		String rawMarket = "";
 		String quantity = "";
 		String price = "";
@@ -198,7 +198,6 @@ public class BrokerClient extends BaseClient {
 		String price = "";
 
 		logger.logMessage(1,"-------Please fill in the following details--------");
-//		logger.logMessage(1, RoutingTable.getRoutingTable().toString());
 
 		logger.logMessage(1, "Enter Instrument You Wish to sell:");
 		while (scanner.hasNext()) {
@@ -252,8 +251,7 @@ public class BrokerClient extends BaseClient {
 
 
 	public void outputMarketListing() {
-		System.out.println("inside printing");
-		for (int i = 0; i < marketListing.size(); i++) {
+		for (int i = 0; i < marketListing.size(); ++i) {
 			switch (i) {
 				case GOLD:
 					logger.logMessage(1, "Gold:");
