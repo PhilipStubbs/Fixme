@@ -20,7 +20,7 @@ public class SocketHandlerAsync extends Thread{
 	private String id;
 	private AbstractLogger logger = getChainOfLoggers();
 	private int index;
-	private boolean isAlive;
+	private boolean isClientAlive;
 
 
 	public SocketHandlerAsync(AsynchronousSocketChannel socket, int clientListSize ,List<String> messages){
@@ -28,7 +28,7 @@ public class SocketHandlerAsync extends Thread{
 		this.messages = messages;
 		String epochString = String.valueOf(Instant.now().toEpochMilli());
 		this.id = epochString.substring(7);
-		this.isAlive = true;
+		this.isClientAlive = true;
 		int tmpInt = clientListSize;
 		index = tmpInt > 5 ? tmpInt % 6 : tmpInt;
 		sendMessage(id + " " + index);
@@ -37,8 +37,8 @@ public class SocketHandlerAsync extends Thread{
 	@Override
 	public void run() {
 		try {
-			while(this.isAlive){
-				if ((socket!= null) && (socket.isOpen()) && this.isAlive) {
+			while(this.isClientAlive){
+				if ((socket!= null) && (socket.isOpen()) && this.isClientAlive) {
 
 					ByteBuffer buffer = ByteBuffer.allocate(1024);
 					Future<Integer> readval = socket.read(buffer);		// readers from client
@@ -51,7 +51,7 @@ public class SocketHandlerAsync extends Thread{
 					if (clientMessage.equalsIgnoreCase("exit")) {
 						break;
 					}
-					if (this.isAlive && !clientMessage.isEmpty()) {
+					if (this.isClientAlive && !clientMessage.isEmpty()) {
 						messages.add(clientMessage);
 					}
 					if (clientMessage.equalsIgnoreCase("update")){
@@ -74,14 +74,14 @@ public class SocketHandlerAsync extends Thread{
 
 	public void sendMessage(String message){
 		try {
-			if (this.isAlive) {
+			if (this.isClientAlive) {
 				ByteBuffer messageByteBuffer = ByteBuffer.allocate(message.length());
 				messageByteBuffer.wrap(message.getBytes());
 
 				Future<Integer> writeVal = socket.write(messageByteBuffer.wrap(message.getBytes()));        // writes to client
 				writeVal.get();
 			} else {
-				logger.logMessage(3, getClass().getSimpleName()+"> Connection is closed -> isAlive:"+isAlive);
+				logger.logMessage(3, getClass().getSimpleName()+"> Connection is closed -> isAlive:"+isClientAlive);
 
 			}
 		}
@@ -98,7 +98,7 @@ public class SocketHandlerAsync extends Thread{
 		} catch (IOException e) {
 			// NO OP
 		} finally {
-			this.isAlive = false;
+			this.isClientAlive = false;
 			Thread.interrupted();
 		}
 	}
@@ -110,6 +110,10 @@ public class SocketHandlerAsync extends Thread{
 
 	public int getIndex() {
 		return index;
+	}
+
+	public boolean isClientAlive(){
+		return isClientAlive;
 	}
 
 	public AsynchronousSocketChannel getSocket() {
