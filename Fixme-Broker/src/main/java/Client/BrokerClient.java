@@ -9,7 +9,6 @@ import java.time.Instant;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
-import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Scanner;
 import java.util.concurrent.*;
@@ -18,7 +17,7 @@ import static Instruments.Instruments.*;
 
 public class BrokerClient extends BaseClient {
 	Scanner scanner;
-	private List<Integer> inventory = new ArrayList<Integer>();
+	private int[] inventory = new int[6];
 	private int numOrders;
 	private int numQuotes;
 	private ArrayList<ArrayList<String>> marketListing;
@@ -67,8 +66,13 @@ public class BrokerClient extends BaseClient {
 						getServerMessage();
 					}
 					else if (line.equalsIgnoreCase("sell")){
-						this.sell();
+						if (!isInventoryEmpty()){
+							this.sell();
+						}
+						else
+							logger.logMessage(1, "You have nothing to sell. Buy something first.");
 						getServerMessage();
+
 					}
 					else if (line.equalsIgnoreCase("list")){
 						outputMarketListing();
@@ -85,19 +89,21 @@ public class BrokerClient extends BaseClient {
 						if (msgArr.length > 14) {
 							int price = Integer.parseInt(getFixValue(13, msgArr));
 							int quantity = Integer.parseInt(getFixValue(11, msgArr));
-							String instrumentType = getFixValue(10, msgArr);
+							int instrumentType = Integer.parseInt(getFixValue(10, msgArr));
 							String msgType = getFixValue(8, msgArr);
 							switch (getFixValue(14, msgArr)) {
 								case "1": //Accepted
 									if (msgType.equals("D")) {
-
+										inventory[instrumentType] += quantity;
 									}
 									//TODO Add to inventory;
 									else if (msgType.equals("S")) {
+										inventory[instrumentType] -= quantity;
 									}
 									//TODO Remove from Inventory
 									break;
 								case "2": //Refused
+									logger.logMessage(1, "Request has been refused");
 									break;
 								default:
 									break;
@@ -223,6 +229,8 @@ public class BrokerClient extends BaseClient {
 				float val = Float.parseFloat(price);
 				if (val > 0 && val < 99999.99)
 					break;
+				else
+					logger.logMessage(1, "Please enter a float value between 0.00 and 99999.99");
 			}
 			catch (NumberFormatException nfe)
 			{
@@ -234,7 +242,7 @@ public class BrokerClient extends BaseClient {
 		Instant instant = Instant.now();
 		ZonedDateTime now = ZonedDateTime.now(ZoneOffset.UTC);
 
-		String fix = String.format("35=D|49=%s|56=%s|52=%s|11=%d|21=1|55=D|54=1|60=%s|38=%s|40=1|44=%s|39=0|",id, marketListing.get(marketIndex).get(market), now, ++this.numOrders,instrument, quantity, price);
+		String fix = String.format("35=D|49=%s|56=%s|52=%s|11=%d|21=1|55=D|54=1|60=%s|38=%s|40=1|44=%s|39=0|",id, marketListing.get(marketIndex).get(market), now, ++this.numOrders,marketIndex, quantity, price);
 		fix = "8=FIX.4|9="+fix.getBytes().length+"|"+fix+"10="+checksum(ByteBuffer.wrap(fix.getBytes()), fix.length()) + "|\n";
 		logger.logMessage(2, fix);
 		sendServerMessage(fix);
@@ -243,24 +251,44 @@ public class BrokerClient extends BaseClient {
 
 	private void sell() {
 		String instrument ="";
-		String market = "";
+		int market = -1;
+		String rawMarket = "";
 		String quantity = "";
 		String price = "";
+		int marketIndex = -1;
 
 		logger.logMessage(1,"-------Please fill in the following details--------");
-
+		outputBrokersInstruments();
 		logger.logMessage(1, "Enter Instrument You Wish to sell:");
 		while (scanner.hasNext()) {
 			instrument = scanner.nextLine();
-			break;
-			//TODO Check if instrument is in brokers list else get another input
+			marketIndex = instrumentToIndex(instrument);
+			if (marketIndex > -1 && marketIndex < marketListing.size()) {
+				break;
+			} else {
+				logger.logMessage(3, "Invalid Instrument type: "+instrument);
+				outputBrokersInstruments();
+			}
 		}
 
 		logger.logMessage(1,"Which market would you like to sell to (Please choose their index):");
 
+		outputMarkets(marketIndex);
+
 		while (scanner.hasNext()) {
-			market = scanner.nextLine();
-			break;
+			rawMarket = scanner.nextLine();
+			try {
+				market = Integer.parseInt(rawMarket);
+				if ( market > -1 && market < marketListing.get(marketIndex).size() ) {
+					break;
+				} else {
+					logger.logMessage(3, "Invalid Market Index: "+rawMarket);
+				}
+			} catch (NumberFormatException e){
+				logger.logMessage(3, "Invalid Market Index: "+rawMarket);
+			}
+			outputMarkets(marketIndex);
+
 			//TODO Check if market is in list else get another input
 		}
 
@@ -270,7 +298,11 @@ public class BrokerClient extends BaseClient {
 			try
 			{
 				int val = Integer.parseInt(quantity);
-				if (val > 0 && val < 100000)
+				if (val > inventory[marketIndex]){
+					logger.logMessage(1, "You can not sell what you don't have");
+					outputBrokersInstruments();
+				}
+				else if (val > 0 && val < 100000)
 					break;
 			}
 			catch (NumberFormatException nfe)
@@ -287,6 +319,8 @@ public class BrokerClient extends BaseClient {
 				float val = Float.parseFloat(price);
 				if (val > 0 && val < 99999.99)
 					break;
+				else
+					logger.logMessage(1, "Please enter a float value between 0.00 and 99999.99");
 			}
 			catch (NumberFormatException nfe)
 			{
@@ -297,7 +331,7 @@ public class BrokerClient extends BaseClient {
 
 		Instant instant = Instant.now();
 		ZonedDateTime now = ZonedDateTime.now(ZoneOffset.UTC);
-		String fix = String.format("35=S|49=%s|56=%s|52=%s|117=%s|55=S|54=2|60=%s|38=%s|40=1|44=%s|39=0|",id,market, now, ++this.numQuotes, instrument, quantity, price);
+		String fix = String.format("35=S|49=%s|56=%s|52=%s|117=%s|21=1|55=S|54=2|60=%s|38=%s|40=1|44=%s|39=0|",id,marketListing.get(marketIndex).get(market), now, ++this.numQuotes, marketIndex, quantity, price);
 		fix = "8=FIX.4|9="+fix.getBytes().length+"|"+fix+"10="+checksum(ByteBuffer.wrap(fix.getBytes()), fix.length()) + "|";
 		logger.logMessage(2, fix);
 		sendServerMessage(fix);
@@ -383,6 +417,43 @@ public class BrokerClient extends BaseClient {
 		}
 	}
 
+	public void outputBrokersInstruments(){
+		logger.logMessage(1, "Available Instruments in your inventory are as followed.");
+		for (int i = 0; i < inventory.length; i++) {
+			switch (i) {
+				case GOLD:
+					if (inventory[GOLD] > 0)
+						logger.logMessage(1, "	Gold: " + inventory[GOLD]);
+					break;
+
+				case SILVER:
+					if (inventory[SILVER] > 0)
+						logger.logMessage(1, "	Silver: " + inventory[SILVER]);
+					break;
+
+				case BITCOIN:
+					if (inventory[BITCOIN] > 0)
+						logger.logMessage(1, "	Bitcoin: " + inventory[BITCOIN]);
+					break;
+
+				case RED_SUGAR:
+					if (inventory[RED_SUGAR] > 0)
+						logger.logMessage(1, "	Red Sugar: " + inventory[RED_SUGAR]);
+					break;
+
+				case MORKITE:
+					if (inventory[MORKITE] > 0)
+						logger.logMessage(1, "	Morkite: " + inventory[MORKITE]);
+					break;
+
+				case APOCA_BLOOM:
+					if (inventory[APOCA_BLOOM] > 0)
+						logger.logMessage(1, "	Apoca Bloom: " + inventory[APOCA_BLOOM]);
+					break;
+			}
+		}
+	}
+
 	public void outputMarkets(int marketIndex) {
 			for (int x = 0; x < marketListing.get(marketIndex).size(); x++){
 				logger.logMessage(1, "	Index:"+ x + " market id:" + marketListing.get(marketIndex).get(x));
@@ -412,5 +483,11 @@ public class BrokerClient extends BaseClient {
 			default:
 				return -1;
 		}
+	}
+
+	public boolean isInventoryEmpty(){
+		if (inventory[GOLD] == 0 && inventory[SILVER] == 0 && inventory[BITCOIN] == 0 && inventory[RED_SUGAR] == 0 && inventory[MORKITE] == 0 && inventory[APOCA_BLOOM] == 0)
+			return true;
+		return false;
 	}
 }
