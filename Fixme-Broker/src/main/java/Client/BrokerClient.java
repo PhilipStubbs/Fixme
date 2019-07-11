@@ -9,6 +9,7 @@ import java.time.Instant;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Scanner;
 import java.util.concurrent.*;
@@ -17,6 +18,7 @@ import static Instruments.Instruments.*;
 
 public class BrokerClient extends BaseClient {
 	Scanner scanner;
+	private List<Integer> inventory = new ArrayList<Integer>();
 	private int numOrders;
 	private int numQuotes;
 	private ArrayList<ArrayList<String>> marketListing;
@@ -52,6 +54,14 @@ public class BrokerClient extends BaseClient {
 						this.terminateConnection();
 						break;
 					}
+                    else if (line.equalsIgnoreCase("update")) {
+                        sendServerMessage("update");
+                        getServerMessage();
+                        processMarketListUpdate(messages.get(0));
+                    }
+                    else if (marketListing.size() <= 0) {
+                        logger.logMessage(1, "No Markets are available at this time. Please UPDATE your listing.");
+                    }
 					else if (line.equalsIgnoreCase("buy")){
 						this.buy();
 						getServerMessage();
@@ -60,17 +70,40 @@ public class BrokerClient extends BaseClient {
 						this.sell();
 						getServerMessage();
 					}
-					else if (line.equalsIgnoreCase("update")) {
-						sendServerMessage("update");
-						getServerMessage();
-						processMarketListUpdate(messages.get(0));
-					} else if (line.equalsIgnoreCase("list")){
+					else if (line.equalsIgnoreCase("list")){
 						outputMarketListing();
 					}
+
 
 					logger.logMessage(2, "User input was: "+ line);
 					TimeUnit.SECONDS.sleep(1);
 
+
+					if (!messages.isEmpty()) {
+						String msgArr[] = messages.get(0).split("\\|");
+						messages.remove(0);
+						if (msgArr.length > 14) {
+							int price = Integer.parseInt(getFixValue(13, msgArr));
+							int quantity = Integer.parseInt(getFixValue(11, msgArr));
+							String instrumentType = getFixValue(10, msgArr);
+							String msgType = getFixValue(8, msgArr);
+							switch (getFixValue(14, msgArr)) {
+								case "1": //Accepted
+									if (msgType.equals("D")) {
+
+									}
+									//TODO Add to inventory;
+									else if (msgType.equals("S")) {
+									}
+									//TODO Remove from Inventory
+									break;
+								case "2": //Refused
+									break;
+								default:
+									break;
+							}
+						}
+					}
 				}
 			} catch(IllegalStateException | NoSuchElementException e) {
 				// System.in has been closed
@@ -167,24 +200,41 @@ public class BrokerClient extends BaseClient {
 			//TODO Check if market is in list else get another input
 		}
 
-		logger.logMessage(1, "How many:");
+		logger.logMessage(1,"How many:");
 		while (scanner.hasNext()) {
 			quantity = scanner.nextLine();
-			break;
-			//TODO Check if quantity is a proper value between 0 - 1000000
+			try
+			{
+				int val = Integer.parseInt(quantity);
+				if (val > 0 && val < 100000)
+					break;
+			}
+			catch (NumberFormatException nfe)
+			{
+				logger.logMessage(1, "Please enter an integer value between 0 and 100000");
+			}
 		}
 
-		logger.logMessage(1,"At what price:");
+		logger.logMessage(1, "At what price:");
 		while (scanner.hasNext()) {
 			price = scanner.nextLine();
-			break;
-			//TODO Check if price is a proper value between 0 - 999999.99
+			try
+			{
+				float val = Float.parseFloat(price);
+				if (val > 0 && val < 99999.99)
+					break;
+			}
+			catch (NumberFormatException nfe)
+			{
+				logger.logMessage(1, "Please enter a float value between 0.00 and 99999.99");
+			}
+
 		}
 
 		Instant instant = Instant.now();
 		ZonedDateTime now = ZonedDateTime.now(ZoneOffset.UTC);
 
-		String fix = String.format("35=D|49=%s|56=%s|52=%s|11=%d|21=1|55=D|54=1|60=%s|38=%s|40=1|44=%s|39=0|",id, market, now, ++this.numOrders,instrument, quantity, price);
+		String fix = String.format("35=D|49=%s|56=%s|52=%s|11=%d|21=1|55=D|54=1|60=%s|38=%s|40=1|44=%s|39=0|",id, marketListing.get(marketIndex).get(market), now, ++this.numOrders,instrument, quantity, price);
 		fix = "8=FIX.4|9="+fix.getBytes().length+"|"+fix+"10="+checksum(ByteBuffer.wrap(fix.getBytes()), fix.length()) + "|\n";
 		logger.logMessage(2, fix);
 		sendServerMessage(fix);
@@ -217,15 +267,32 @@ public class BrokerClient extends BaseClient {
 		logger.logMessage(1,"How many:");
 		while (scanner.hasNext()) {
 			quantity = scanner.nextLine();
-			break;
-			//TODO Check if quantity is a proper value between 0 - 1000000
+			try
+			{
+				int val = Integer.parseInt(quantity);
+				if (val > 0 && val < 100000)
+					break;
+			}
+			catch (NumberFormatException nfe)
+			{
+				logger.logMessage(1, "Please enter an integer value between 0 and 100000");
+			}
 		}
 
 		logger.logMessage(1, "At what price:");
 		while (scanner.hasNext()) {
 			price = scanner.nextLine();
-			break;
-			//TODO Check if price is a proper value between 0 - 999999.99
+			try
+			{
+				float val = Float.parseFloat(price);
+				if (val > 0 && val < 99999.99)
+					break;
+			}
+			catch (NumberFormatException nfe)
+			{
+				logger.logMessage(1, "Please enter a float value between 0.00 and 99999.99");
+			}
+
 		}
 
 		Instant instant = Instant.now();

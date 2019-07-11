@@ -8,7 +8,6 @@ import java.nio.ByteBuffer;
 import java.nio.channels.AsynchronousSocketChannel;
 import java.nio.channels.CompletionHandler;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Random;
 import java.util.concurrent.ExecutionException;
@@ -21,7 +20,7 @@ import static Responsibilty.Logger.getChainOfLoggers;
 public class BaseClient {
 	protected int port;
 	protected AsynchronousSocketChannel client;
-	protected List<String> messages = new ArrayList<String>();
+	protected ArrayList<String> messages = new ArrayList<>();
 	protected String id;
 	protected AbstractLogger logger = getChainOfLoggers();
 
@@ -71,21 +70,6 @@ public class BaseClient {
 
 			String message = new String(buffer.array()).trim();
 			logger.logMessage(2 ,"Received from server: " + message);
-			//TODO Identify messages coming in BUY SELL EXECUTE OR FAIL
-			String msgArr[] = message.split("\\|");
-
-			/*	gets fix message out */
-			if (msgArr.length > 14){
-				switch (getFixValue(9, msgArr)){ //Could also use index 10 and adjust case values to 1 and 2 (Buy and Sell)
-					case "D":
-						//TODO buy;
-						break;
-					case "S":
-						//TODO sell
-						break;
-					//TODO Cases that are sent back to broker - success or fail
-				}
-			}
 			messages.add(message);
 
 		} catch (ExecutionException | InterruptedException e){
@@ -117,6 +101,12 @@ public class BaseClient {
 
 	public String getFixValue(int index, String[] arr){
 		return arr[index].substring(arr[index].lastIndexOf("=") + 1);
+	}
+
+	public String[] setFixValue(int index, String newValue, String[] arr){
+		String orgValue = getFixValue(index, arr);
+		arr[index] = arr[index].replace(orgValue, newValue);
+		return arr;
 	}
 
 	public AsynchronousSocketChannel getClient() {

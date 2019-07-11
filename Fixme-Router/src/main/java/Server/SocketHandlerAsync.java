@@ -85,9 +85,9 @@ public class SocketHandlerAsync extends Thread{
 
 			}
 		}
-		 catch (InterruptedException | ExecutionException e){
-			 logger.logMessage(3, getClass().getSimpleName()+"> Server Exception "+ e.getLocalizedMessage());
-			 terminateConnection();
+		catch (InterruptedException | ExecutionException e){
+			logger.logMessage(3, getClass().getSimpleName()+"> Server Exception "+ e.getLocalizedMessage());
+			terminateConnection();
 		}
 	}
 
