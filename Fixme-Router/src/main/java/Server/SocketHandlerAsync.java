@@ -1,6 +1,7 @@
 package Server;
 
 import Responsibilty.AbstractLogger;
+import Server.RoutingTable.RoutingTable;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -41,16 +42,21 @@ public class SocketHandlerAsync extends Thread{
 
 					ByteBuffer buffer = ByteBuffer.allocate(1024);
 					Future<Integer> readval = socket.read(buffer);		// readers from client
-					readval.get();
 
-
-					String clientMessage =  new String(buffer.array()).trim();
-					if (clientMessage.toLowerCase().contains("exit")){
+					if (readval.get() == -1){
 						break;
 					}
-					logger.logMessage(2, "Received from client " +id +": "	+clientMessage);
-					if (this.isAlive) {
+					String clientMessage =  new String(buffer.array()).trim();
+					logger.logMessage(2, "Received from client "+ this.id + ": "	+clientMessage);
+					if (clientMessage.equalsIgnoreCase("exit")) {
+						break;
+					}
+					if (this.isAlive && !clientMessage.isEmpty()) {
 						messages.add(clientMessage);
+					}
+					if (clientMessage.equalsIgnoreCase("update")){
+						sendMessage(RoutingTable.serializedMarketString());
+						messages.remove(clientMessage);
 					}
 					buffer.flip();
 					buffer.clear();

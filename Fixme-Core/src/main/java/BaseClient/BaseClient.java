@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
 import java.nio.channels.AsynchronousSocketChannel;
+import java.nio.channels.CompletionHandler;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
@@ -63,7 +64,10 @@ public class BaseClient {
 			logger.logMessage(2 ,"Is client open " + client.isOpen());
 			ByteBuffer buffer = ByteBuffer.allocate(1024);				// TODO -- find better way to allocate buffersize
 			Future<Integer> readval = client.read(buffer);                // fetches from server
-			readval.get();
+			if (readval.get() == -1){
+				this.terminateConnection();
+			}
+
 			String message = new String(buffer.array()).trim();
 			logger.logMessage(2 ,"Received from server: " + message);
 			messages.add(message);

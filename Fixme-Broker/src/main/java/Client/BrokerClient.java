@@ -1,8 +1,6 @@
 package Client;
 
 import BaseClient.BaseClient;
-import Server.RoutingTable.RoutingTable;
-
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
@@ -14,15 +12,16 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Scanner;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
+
+import static Instruments.Instruments.*;
 
 public class BrokerClient extends BaseClient {
 	Scanner scanner;
 	private List<Integer> inventory = new ArrayList<Integer>();
 	private int numOrders;
 	private int numQuotes;
+	private ArrayList<ArrayList<String>> marketListing;
 
 	public BrokerClient(int port){
 		this.port = port;
@@ -38,17 +37,16 @@ public class BrokerClient extends BaseClient {
 			String[] split = messages.get(0).split(" ");
 			int tmpInt = Integer.parseInt(split[1]);				// TODO client number -> maybe dont need for broker.
 			id = split[0];
-
-			messages.clear();
 			logger.logMessage(1,"ID Assigned :"+id);
 
+			messages.clear();
+			getServerMessage();
+			processMarketListUpdate(messages.get(0));
+			messages.clear();
 			scanner = new Scanner(System.in);
 			try {
 				while (true) {
-					logger.logMessage(1,"---------Please input a command---------");
-					logger.logMessage(1,"BUY  - buy an instrument from the markets");
-					logger.logMessage(1,"SELL - sell an instrument to the markets");
-					logger.logMessage(1,"EXIT - close connection to the server");
+					brokerInstructions();
 
 					String line = scanner.nextLine();
 					if (line.equalsIgnoreCase("exit")){
@@ -56,17 +54,30 @@ public class BrokerClient extends BaseClient {
 						this.terminateConnection();
 						break;
 					}
+                    else if (line.equalsIgnoreCase("update")) {
+                        sendServerMessage("update");
+                        getServerMessage();
+                        processMarketListUpdate(messages.get(0));
+                    }
+                    else if (marketListing.size() <= 0) {
+                        logger.logMessage(1, "No Markets are available at this time. Please UPDATE your listing.");
+                    }
 					else if (line.equalsIgnoreCase("buy")){
 						this.buy();
+						getServerMessage();
 					}
 					else if (line.equalsIgnoreCase("sell")){
 						this.sell();
+						getServerMessage();
 					}
+					else if (line.equalsIgnoreCase("list")){
+						outputMarketListing();
+					}
+
+
 					logger.logMessage(2, "User input was: "+ line);
-//					sendServerMessage(line);
 					TimeUnit.SECONDS.sleep(1);
 
-					getServerMessage();
 
 					if (!messages.isEmpty()) {
 						String msgArr[] = messages.get(0).split("\\|");
@@ -89,7 +100,6 @@ public class BrokerClient extends BaseClient {
 								case "2": //Refused
 									break;
 								default:
-									//TODO no response
 									break;
 							}
 						}
@@ -97,14 +107,14 @@ public class BrokerClient extends BaseClient {
 				}
 			} catch(IllegalStateException | NoSuchElementException e) {
 				// System.in has been closed
-				logger.logMessage(3,"System.in was closed; exiting");
+				logger.logMessage(3, getClass().getSimpleName() + "> System.in was closed; exiting");
 			}
 		}
 		catch (ExecutionException | IOException e) {
 			e.printStackTrace();
 		}
 		catch (InterruptedException e) {
-			logger.logMessage(3 ,"Disconnected from the server.");
+			logger.logMessage(3 ,getClass().getSimpleName() + "> Disconnected from the server.");
 		} finally {
 			try {
 				client.close();
@@ -114,27 +124,79 @@ public class BrokerClient extends BaseClient {
 		}
 	}
 
+
+	private void processMarketListUpdate(String serialized){
+		ArrayList<ArrayList<String>> updatedMarketListing = new ArrayList<ArrayList<String>>();
+		int tmpIndex = serialized.indexOf("|") + 1;
+
+		String[] marketListing = serialized.substring(tmpIndex).split("\n");
+		String[] markets;
+
+		for (int i = 0; i < marketListing.length; i++){
+			markets = marketListing[i].split("_");
+			for (int x = 1; x < markets.length; ++x){
+				try {
+					updatedMarketListing.get(i).add(markets[x]);
+				} catch (IndexOutOfBoundsException e){
+					// If an error is thrown. We create the new list.
+					updatedMarketListing.add(new ArrayList<String>());
+					updatedMarketListing.get(i).add(markets[x]);
+				}
+			}
+		}
+		this.marketListing = updatedMarketListing;
+	}
+
+	private void brokerInstructions(){
+		logger.logMessage(1,"---------Please input a command---------\n" +
+		"		BUY  - buy an instrument from the markets\n" +
+		"		SELL - sell an instrument to the markets\n" +
+		"		UPDATE - update your market listing\n" +
+		"		LIST - display market listings\n" +
+		"		EXIT - close connection to the server\n");
+	}
+
 	private void buy() {
 
 		String instrument ="";
-		String market = "";
+		int market = -1;
+		String rawMarket = "";
 		String quantity = "";
 		String price = "";
+		int marketIndex = -1;
 
 		logger.logMessage(1,"-------Please fill in the following details--------");
-		logger.logMessage(1, RoutingTable.getRoutingTable().toString());
+		outputAvailableInstruments();
 
 		logger.logMessage(1,"Enter Instrument You Wish to buy:");
 		while (scanner.hasNext()) {
 			instrument = scanner.nextLine();
-			break;
-			//TODO Check if instrument is in list else get another input
+			marketIndex = instrumentToIndex(instrument);
+			if (marketIndex > -1 && marketIndex < marketListing.size()) {
+				break;
+			} else {
+				logger.logMessage(3, "Invalid Instrument type: "+instrument);
+				outputAvailableInstruments();
+			}
 		}
 
 		logger.logMessage(1,"Which market would you like to buy from (Please choose their index):");
+		outputMarkets(marketIndex);
+
 		while (scanner.hasNext()) {
-			market = scanner.nextLine();
-			break;
+			rawMarket = scanner.nextLine();
+			try {
+				market = Integer.parseInt(rawMarket);
+				if ( market > -1 && market < marketListing.get(marketIndex).size() ) {
+					break;
+				} else {
+					logger.logMessage(3, "Invalid Market Index: "+rawMarket);
+				}
+			} catch (NumberFormatException e){
+				logger.logMessage(3, "Invalid Market Index: "+rawMarket);
+			}
+			outputMarkets(marketIndex);
+
 			//TODO Check if market is in list else get another input
 		}
 
@@ -172,10 +234,11 @@ public class BrokerClient extends BaseClient {
 		Instant instant = Instant.now();
 		ZonedDateTime now = ZonedDateTime.now(ZoneOffset.UTC);
 
-		String fix = String.format("35=D|49=%s|56=%s|52=%s|11=%d|21=1|55=D|54=1|60=%s|38=%s|40=1|44=%s|39=0|",id, market, now, ++this.numOrders,instrument, quantity, price);
+		String fix = String.format("35=D|49=%s|56=%s|52=%s|11=%d|21=1|55=D|54=1|60=%s|38=%s|40=1|44=%s|39=0|",id, marketListing.get(marketIndex).get(market), now, ++this.numOrders,instrument, quantity, price);
 		fix = "8=FIX.4|9="+fix.getBytes().length+"|"+fix+"10="+checksum(ByteBuffer.wrap(fix.getBytes()), fix.length()) + "|\n";
 		logger.logMessage(2, fix);
 		sendServerMessage(fix);
+			//TODO Send FIX message to server
 	}
 
 	private void sell() {
@@ -185,7 +248,6 @@ public class BrokerClient extends BaseClient {
 		String price = "";
 
 		logger.logMessage(1,"-------Please fill in the following details--------");
-		logger.logMessage(1, RoutingTable.getRoutingTable().toString());
 
 		logger.logMessage(1, "Enter Instrument You Wish to sell:");
 		while (scanner.hasNext()) {
@@ -195,6 +257,7 @@ public class BrokerClient extends BaseClient {
 		}
 
 		logger.logMessage(1,"Which market would you like to sell to (Please choose their index):");
+
 		while (scanner.hasNext()) {
 			market = scanner.nextLine();
 			break;
@@ -238,6 +301,7 @@ public class BrokerClient extends BaseClient {
 		fix = "8=FIX.4|9="+fix.getBytes().length+"|"+fix+"10="+checksum(ByteBuffer.wrap(fix.getBytes()), fix.length()) + "|";
 		logger.logMessage(2, fix);
 		sendServerMessage(fix);
+		//TODO Send FIX message to server
 	}
 
 	public AsynchronousSocketChannel getClient() {
@@ -250,5 +314,103 @@ public class BrokerClient extends BaseClient {
 			checksum += b.get(i);
 		}
 		return checksum % 256;
+	}
+
+
+	public void outputMarketListing() {
+		for (int i = 0; i < marketListing.size(); ++i) {
+			switch (i) {
+				case GOLD:
+					logger.logMessage(1, "Gold:");
+					break;
+
+				case SILVER:
+					logger.logMessage(1, "Silver:");
+					break;
+
+				case BITCOIN:
+					logger.logMessage(1, "Bitcoin:");
+					break;
+
+				case RED_SUGAR:
+					logger.logMessage(1, "Red Sugar:");
+					break;
+
+				case MORKITE:
+					logger.logMessage(1, "Morkite:");
+					break;
+
+				case APOCA_BLOOM:
+					logger.logMessage(1, "Apoca Bloom:");
+					break;
+
+			}
+
+			for (int x = 0; x < marketListing.get(i).size(); x++){
+				logger.logMessage(1, "	Index:"+ i + "-" + x + " market id:" + marketListing.get(i).get(x));
+			}
+		}
+	}
+
+	public void outputAvailableInstruments() {
+		logger.logMessage(1, "Available Instruments are as followed.");
+		for (int i = 0; i < marketListing.size(); i++) {
+			switch (i) {
+				case GOLD:
+					logger.logMessage(1, "	Gold");
+					break;
+
+				case SILVER:
+					logger.logMessage(1, "	Silver");
+					break;
+
+				case BITCOIN:
+					logger.logMessage(1, "	Bitcoin");
+					break;
+
+				case RED_SUGAR:
+					logger.logMessage(1, "	Red Sugar");
+					break;
+
+				case MORKITE:
+					logger.logMessage(1, "	Morkite");
+					break;
+
+				case APOCA_BLOOM:
+					logger.logMessage(1, "	Apoca Bloom");
+					break;
+			}
+		}
+	}
+
+	public void outputMarkets(int marketIndex) {
+			for (int x = 0; x < marketListing.get(marketIndex).size(); x++){
+				logger.logMessage(1, "	Index:"+ x + " market id:" + marketListing.get(marketIndex).get(x));
+			}
+	}
+
+	public int instrumentToIndex(String input){
+		switch (input.toLowerCase()) {
+			case "gold":
+				return GOLD;
+
+			case "silver":
+				return SILVER;
+
+			case "bitcoin":
+				return BITCOIN;
+
+			case "red sugar":
+				return RED_SUGAR;
+
+			case "morkite":
+				return MORKITE;
+
+			case "apoca bloom":
+				return APOCA_BLOOM;
+
+			default:
+				return -1;
+		}
 	}
 }
