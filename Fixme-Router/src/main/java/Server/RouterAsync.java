@@ -16,6 +16,7 @@ import java.util.concurrent.TimeUnit;
 import static Responsibilty.AbstractLogger.DEBUG;
 import static Responsibilty.AbstractLogger.ERROR;
 import static Responsibilty.AbstractLogger.INFO;
+import static Responsibilty.ConsoleLogger.*;
 import static Responsibilty.Logger.getChainOfLoggers;
 
 public class RouterAsync extends Thread {
@@ -41,8 +42,9 @@ public class RouterAsync extends Thread {
 				Future<AsynchronousSocketChannel> acceptCon = server.accept();
 				AsynchronousSocketChannel client = acceptCon.get();
 
-				SocketHandlerAsync socketHandlerAsync = new SocketHandlerAsync(client, clientList.size() ,messages);
-				logger.logMessage(INFO,"Added Client: " + socketHandlerAsync.getClientId());
+				SocketHandlerAsync socketHandlerAsync = new SocketHandlerAsync(client, clientList.size() ,messages, port);
+				String clientType = port == 5000 ? ANSI_PURPLE+"Broker"+ANSI_RESET : ANSI_YELLOW+"Market"+ANSI_RESET ;
+				logger.logMessage(INFO,"Added "+clientType+": " + socketHandlerAsync.getClientId());
 				clientList.add(socketHandlerAsync);
 				socketHandlerAsync.start();
 				if (port == 5001) {
@@ -88,7 +90,8 @@ public class RouterAsync extends Thread {
 			if (socketHandlerAsync != null) {
 				String message = str;												// message
 				socketHandlerAsync.sendMessage(message);
-				logger.logMessage(DEBUG,"Writing to client "+id+": " + message);
+				String clientType = port == 5000 ? ANSI_PURPLE+"Broker"+ANSI_RESET : ANSI_YELLOW+"Market"+ANSI_RESET ;
+				logger.logMessage(DEBUG,BLUE_UNDERLINED+"Writing"+ANSI_RESET+" to "+clientType+" "+id+": " + message);
 			} else {
 				logger.logMessage(ERROR,getClass().getSimpleName() + "> failed to send message to :"+ id);
 			}
@@ -103,10 +106,15 @@ public class RouterAsync extends Thread {
 
 	public List<SocketHandlerAsync> getClientList() {
 		/* checks for dead threads */
-		for(int i = 0; i < this.clientList.size(); i++){
+		for(int i = 0; i < this.clientList.size(); ++i){
 			if (!this.clientList.get(i).isClientAlive() || !this.clientList.get(i).getSocket().isOpen()){
 				logger.logMessage(1, getClass().getSimpleName()+"> Removing client:" + this.clientList.get(i).getClientId());
-				RoutingTable.removeMarket(this.clientList.get(i));
+				if (port == 5001) {
+					RoutingTable.removeMarket(this.clientList.get(i));
+				}
+				if (port == 5000) {
+					RoutingTable.removeBroker(this.clientList.get(i));
+				}
 				this.clientList.remove(i);
 			}
 		}

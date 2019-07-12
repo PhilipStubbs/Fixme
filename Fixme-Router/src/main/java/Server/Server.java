@@ -65,7 +65,6 @@ public class Server {
                     String strArray[] = tmpMessage. split("\\|");
 
                     if (strArray.length > 14){
-                        System.out.println("HELLOOOOOOOO");
                         String msgTo = strArray[14].substring(strArray[14].lastIndexOf("=") + 1);
                         if (msgTo.equals("0")) {
                             String marketId = strArray[4].substring(strArray[4].lastIndexOf("=") + 1);

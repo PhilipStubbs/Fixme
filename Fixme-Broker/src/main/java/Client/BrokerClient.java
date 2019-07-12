@@ -68,10 +68,10 @@ public class BrokerClient extends BaseClient {
 					else if (line.equalsIgnoreCase("sell")){
 						if (!isInventoryEmpty()){
 							this.sell();
+							getServerMessage();
 						}
 						else
 							logger.logMessage(1, "You have nothing to sell. Buy something first.");
-						getServerMessage();
 
 					}
 					else if (line.equalsIgnoreCase("list")){
@@ -94,10 +94,12 @@ public class BrokerClient extends BaseClient {
 							switch (getFixValue(14, msgArr)) {
 								case "1": //Accepted
 									if (msgType.equals("D")) {
+										logger.logMessage(1, "Request is Successful");
 										inventory[instrumentType] += quantity;
 									}
 									//TODO Add to inventory;
 									else if (msgType.equals("S")) {
+										logger.logMessage(1, "Request is Successful");
 										inventory[instrumentType] -= quantity;
 									}
 									//TODO Remove from Inventory
@@ -243,7 +245,7 @@ public class BrokerClient extends BaseClient {
 		ZonedDateTime now = ZonedDateTime.now(ZoneOffset.UTC);
 
 		String fix = String.format("35=D|49=%s|56=%s|52=%s|11=%d|21=1|55=D|54=1|60=%s|38=%s|40=1|44=%s|39=0|",id, marketListing.get(marketIndex).get(market), now, ++this.numOrders,marketIndex, quantity, price);
-		fix = "8=FIX.4|9="+fix.getBytes().length+"|"+fix+"10="+checksum(ByteBuffer.wrap(fix.getBytes()), fix.length()) + "|\n";
+		fix = "8=FIX.4|9="+fix.getBytes().length+"|"+fix+"10="+checksum(ByteBuffer.wrap(fix.getBytes()), fix.length()) + "|";
 		logger.logMessage(2, fix);
 		sendServerMessage(fix);
 			//TODO Send FIX message to server
@@ -263,7 +265,7 @@ public class BrokerClient extends BaseClient {
 		while (scanner.hasNext()) {
 			instrument = scanner.nextLine();
 			marketIndex = instrumentToIndex(instrument);
-			if (marketIndex > -1 && marketIndex < marketListing.size()) {
+			if (marketIndex > -1 && marketIndex < marketListing.size() && inventory[marketIndex] > 0) {
 				break;
 			} else {
 				logger.logMessage(3, "Invalid Instrument type: "+instrument);

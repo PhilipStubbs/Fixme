@@ -12,6 +12,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 
 import static Responsibilty.AbstractLogger.INFO;
+import static Responsibilty.ConsoleLogger.*;
 import static Responsibilty.Logger.getChainOfLoggers;
 
 public class SocketHandlerAsync extends Thread{
@@ -20,15 +21,17 @@ public class SocketHandlerAsync extends Thread{
 	private String id;
 	private AbstractLogger logger = getChainOfLoggers();
 	private int index;
+	private String clientType;
 	private boolean isClientAlive;
 
 
-	public SocketHandlerAsync(AsynchronousSocketChannel socket, int clientListSize ,List<String> messages){
+	public SocketHandlerAsync(AsynchronousSocketChannel socket, int clientListSize ,List<String> messages, int port){
 		this.socket = socket;
 		this.messages = messages;
 		String epochString = String.valueOf(Instant.now().toEpochMilli());
 		this.id = epochString.substring(7);
 		this.isClientAlive = true;
+		clientType = port == 5000 ? ANSI_PURPLE+"Broker"+ANSI_RESET : ANSI_YELLOW+"Market"+ANSI_RESET ;
 		int tmpInt = clientListSize;
 		index = tmpInt > 5 ? tmpInt % 6 : tmpInt;
 		sendMessage(id + " " + index);
@@ -47,7 +50,7 @@ public class SocketHandlerAsync extends Thread{
 						break;
 					}
 					String clientMessage =  new String(buffer.array()).trim();
-					logger.logMessage(2, "Received from client "+ this.id + ": "	+clientMessage);
+					logger.logMessage(2, GREEN_UNDERLINED+"Received"+ ANSI_RESET+ " from "+clientType +" "+ this.id + ": "	+clientMessage);
 					if (clientMessage.equalsIgnoreCase("exit")) {
 						break;
 					}
