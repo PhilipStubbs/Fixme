@@ -2,6 +2,7 @@ package Client;
 
 import BaseClient.BaseClient;
 import java.io.IOException;
+import java.net.ConnectException;
 import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
 import java.nio.channels.AsynchronousSocketChannel;
@@ -77,9 +78,10 @@ public class BrokerClient extends BaseClient {
 					else if (line.equalsIgnoreCase("list")){
 						outputMarketListing();
 					}
+					else{
+						logger.logMessage(2, "User input was: "+ line);
+					}
 
-
-					logger.logMessage(2, "User input was: "+ line);
 					TimeUnit.SECONDS.sleep(1);
 
 
@@ -118,8 +120,15 @@ public class BrokerClient extends BaseClient {
 				logger.logMessage(3, getClass().getSimpleName() + "> System.in was closed; exiting");
 			}
 		}
-		catch (ExecutionException | IOException e) {
-			e.printStackTrace();
+		catch (ExecutionException |IOException e) {
+
+			Throwable ee = e.getCause ();
+			if (ee instanceof ConnectException)
+			{
+				logger.logMessage(3, "Could not connect. Check if server is running.");
+			}
+			else
+				e.printStackTrace();
 		}
 		catch (InterruptedException e) {
 			logger.logMessage(3 ,getClass().getSimpleName() + "> Disconnected from the server.");
@@ -214,12 +223,14 @@ public class BrokerClient extends BaseClient {
 			try
 			{
 				int val = Integer.parseInt(quantity);
-				if (val > 0 && val < 100000)
+				if (val > 0 && val < 101)
 					break;
+				else
+					logger.logMessage(1, "Please enter an integer value between 0 and 101");
 			}
 			catch (NumberFormatException nfe)
 			{
-				logger.logMessage(1, "Please enter an integer value between 0 and 100000");
+				logger.logMessage(1, "Please enter an integer value between 0 and 101");
 			}
 		}
 
@@ -304,12 +315,14 @@ public class BrokerClient extends BaseClient {
 					logger.logMessage(1, "You can not sell what you don't have");
 					outputBrokersInstruments();
 				}
-				else if (val > 0 && val < 100000)
+				else if (val > 0 && val < 101)
 					break;
+				else
+					logger.logMessage(1, "Please enter an integer value between 0 and 101");
 			}
 			catch (NumberFormatException nfe)
 			{
-				logger.logMessage(1, "Please enter an integer value between 0 and 100000");
+				logger.logMessage(1, "Please enter an integer value between 0 and 101");
 			}
 		}
 

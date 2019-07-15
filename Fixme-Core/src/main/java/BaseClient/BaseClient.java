@@ -3,6 +3,7 @@ package BaseClient;
 import Responsibilty.AbstractLogger;
 
 import java.io.IOException;
+import java.net.ConnectException;
 import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
 import java.nio.channels.AsynchronousSocketChannel;
@@ -15,6 +16,9 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
 import static Responsibilty.AbstractLogger.INFO;
+import static Responsibilty.ConsoleLogger.ANSI_RESET;
+import static Responsibilty.ConsoleLogger.BLUE_UNDERLINED;
+import static Responsibilty.ConsoleLogger.GREEN_UNDERLINED;
 import static Responsibilty.Logger.getChainOfLoggers;
 
 public class BaseClient {
@@ -49,12 +53,20 @@ public class BaseClient {
 			}
 
 		}
-		catch (ExecutionException | IOException e) {
+		catch(ExecutionException ee){
+			logger.logMessage(3, "Failed to connect. Check if Server is running");
+
+		}
+		catch (ConnectException ce){
+			logger.logMessage(3, "ConnectException");
+		}
+		catch (IOException e) {
 			e.printStackTrace();
 		}
 		catch (InterruptedException e) {
 			System.out.println("Disconnected from the server.");
 		}
+
 	}
 
 	public BaseClient(){};
@@ -69,7 +81,7 @@ public class BaseClient {
 			}
 
 			String message = new String(buffer.array()).trim();
-			logger.logMessage(2 ,"Received from server: " + message);
+			logger.logMessage(2 ,GREEN_UNDERLINED+"Received"+ANSI_RESET+" message from server: " + message);
 			messages.add(message);
 
 		} catch (ExecutionException | InterruptedException e){
@@ -81,7 +93,7 @@ public class BaseClient {
 		try {
 			ByteBuffer buffer = ByteBuffer.wrap(message.getBytes());
 			Future<Integer> writeval = client.write(buffer);				//writes to server
-			logger.logMessage(2 ,"Writing to server: "+message);
+			logger.logMessage(2 ,BLUE_UNDERLINED+"Writing"+ANSI_RESET+" to server: "+message);
 			writeval.get();
 		} catch (ExecutionException | InterruptedException e){
 			e.printStackTrace();

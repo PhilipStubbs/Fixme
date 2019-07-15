@@ -3,6 +3,7 @@ package Client;
 import BaseClient.BaseClient;
 
 import java.io.IOException;
+import java.net.ConnectException;
 import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
 import java.nio.channels.AsynchronousSocketChannel;
@@ -12,6 +13,9 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
 import Instruments.Instruments;
+
+import static Responsibilty.ConsoleLogger.ANSI_PURPLE;
+import static Responsibilty.ConsoleLogger.ANSI_RESET;
 
 
 public class MarketClient extends BaseClient {
@@ -43,7 +47,6 @@ public class MarketClient extends BaseClient {
 				TimeUnit.SECONDS.sleep(1);
 				getServerMessage();
 				if (!messages.isEmpty()) {
-					System.out.println("MESSAGE LIST SIZE = "+ messages.size());
 					String message = messages.get(0);
 					messages.remove(0);
 
@@ -52,22 +55,30 @@ public class MarketClient extends BaseClient {
 						int price = Integer.parseInt(getFixValue(13, msgArr));
 						int quantity = Integer.parseInt(getFixValue(11, msgArr));
 						String instrument = getFixValue(10, msgArr);
+						String brokerID = getFixValue(3, msgArr);
 						switch (getFixValue(8, msgArr)) { //Could also use index 9 and adjust case values to 1 and 2 (Buy and Sell)
 							case "D": {
+								logger.logMessage(1, ANSI_PURPLE+"Broker " +ANSI_RESET+brokerID+ ": Request to buy " + quantity + " " + Instruments.instruments[Integer.parseInt(instrument)]);
 								if (quantity <= stock) {
 									stock -= quantity;
+									logger.logMessage(1, "Request accepted");
 									sendServerMessage(String.join("|", setFixValue(14, "1", msgArr)) + "|");
 								} else {
+									logger.logMessage(1, "Request denied");
 									sendServerMessage(String.join("|", setFixValue(14, "2", msgArr)) + "|");
 								}
 								break;
 							}
 							case "S": {
+								logger.logMessage(1, "Request to sell " + quantity + " " + instrument + " from Broker " + brokerID);
 								stock += quantity;
+								logger.logMessage(1, "Request accepted");
 								sendServerMessage(String.join("|", setFixValue(14, "1", msgArr)) + "|");
 								break;
 							}
 							default:
+								logger.logMessage(1, "Unknown request from Broker " + brokerID);
+								logger.logMessage(1, "Request denied");
 								sendServerMessage(String.join("|", setFixValue(14, "2", msgArr)) + "|");
 								break;
 						}
@@ -77,15 +88,19 @@ public class MarketClient extends BaseClient {
 			}
 
 		}
-		catch (ExecutionException | IOException e) {
-			e.printStackTrace();
+		catch (ExecutionException |IOException e) {
+
+			Throwable ee = e.getCause ();
+			if (ee instanceof ConnectException)
+			{
+				logger.logMessage(3, "Could not connect. Check if server is running.");
+			}
+			else
+				e.printStackTrace();
 		}
 		catch (InterruptedException e) {
 			System.out.println("Disconnected from the server.");
 		} finally {
-			System.out.println("finally"+client.isOpen());
-
-
 		}
 	}
 
